@@ -1,0 +1,97 @@
+import { MAJOR_TAG_PATTERN, SEMVER_TAG_PATTERN } from "../constants";
+import type { GitHubTag, TagInfo } from "../types";
+
+/**
+ * semverベースのバージョン比較ユーティリティ
+ */
+
+/** GitHubタグをTagInfoに変換し、semverでソートして返す */
+export function sortAndFilterTags(githubTags: GitHubTag[]): TagInfo[] {
+  const tagInfos: TagInfo[] = githubTags
+    .filter((tag) => SEMVER_TAG_PATTERN.test(tag.name) || MAJOR_TAG_PATTERN.test(tag.name))
+    .map((tag) => ({
+      name: tag.name,
+      sha: tag.commit.sha,
+      isMajorTag: MAJOR_TAG_PATTERN.test(tag.name),
+    }));
+
+  return tagInfos.sort((a, b) => compareSemver(b.name, a.name));
+}
+
+/** 最新の安定バージョンタグを取得する（プレリリース除外） */
+export function getLatestStableTag(tags: TagInfo[]): TagInfo | undefined {
+  return tags.find((tag) => {
+    if (tag.isMajorTag) {
+      return false;
+    }
+    const match = tag.name.match(SEMVER_TAG_PATTERN);
+    if (!match) {
+      return false;
+    }
+    // プレリリースを除外
+    return !match[4];
+  });
+}
+
+/** 指定されたメジャーバージョンに属する最新の安定タグを取得する */
+export function getLatestTagInMajor(tags: TagInfo[], majorVersion: number): TagInfo | undefined {
+  return tags.find((tag) => {
+    if (tag.isMajorTag) {
+      return false;
+    }
+    const match = tag.name.match(SEMVER_TAG_PATTERN);
+    if (!match || match[4]) {
+      return false;
+    }
+    return parseInt(match[1], 10) === majorVersion;
+  });
+}
+
+/**
+ * 2つのsemverバージョンを比較する
+ * @returns 正の値: aが大きい, 負の値: bが大きい, 0: 等しい
+ */
+export function compareSemver(a: string, b: string): number {
+  const parsedA = parseSemverParts(a);
+  const parsedB = parseSemverParts(b);
+
+  if (!parsedA && !parsedB) return 0;
+  if (!parsedA) return -1;
+  if (!parsedB) return 1;
+
+  if (parsedA.major !== parsedB.major) return parsedA.major - parsedB.major;
+  if (parsedA.minor !== parsedB.minor) return parsedA.minor - parsedB.minor;
+  if (parsedA.patch !== parsedB.patch) return parsedA.patch - parsedB.patch;
+
+  // プレリリースなしが安定版でプレリリースありより優先
+  if (!parsedA.prerelease && parsedB.prerelease) return 1;
+  if (parsedA.prerelease && !parsedB.prerelease) return -1;
+  if (parsedA.prerelease && parsedB.prerelease) {
+    return parsedA.prerelease.localeCompare(parsedB.prerelease);
+  }
+
+  return 0;
+}
+
+/** 指定のrefが最新かどうかを判定する */
+export function isLatestVersion(ref: string, latestTag: TagInfo | undefined): boolean {
+  if (!latestTag) {
+    return false;
+  }
+  return ref === latestTag.name || ref === latestTag.sha;
+}
+
+function parseSemverParts(
+  tag: string,
+): { major: number; minor: number; patch: number; prerelease?: string } | null {
+  const match = tag.match(SEMVER_TAG_PATTERN);
+  if (!match) {
+    return null;
+  }
+  return {
+    major: parseInt(match[1], 10),
+    minor: match[2] !== undefined ? parseInt(match[2], 10) : 0,
+    patch: match[3] !== undefined ? parseInt(match[3], 10) : 0,
+    prerelease: match[4] || undefined,
+  };
+}

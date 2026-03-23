@@ -4,39 +4,68 @@
 
 ## 4. 設計概要
 
-<!-- システム全体の構造を俯瞰できる図・フローを記載する。
-     詳細に入る前に「何をどう組み合わせるか」の全体像を示す。 -->
-
 ### アーキテクチャ図
 
 ```mermaid
 graph TD
-    A[クライアント] -->|HTTP/REST| B[API Gateway]
-    B --> C[アプリケーションサーバー]
-    C --> D[(データベース)]
-    C --> E[外部サービス]
+    A[VS Code Extension Host] --> B[extension.ts<br/>エントリポイント]
+    B --> C[YamlParser<br/>uses:行抽出]
+    B --> D[Decorator<br/>行末装飾]
+    B --> E[HoverProvider<br/>ホバー詳細]
+    B --> F[CodeLensProvider<br/>オプション]
+    B --> G[Commands<br/>コマンド群]
+
+    C --> H[ActionResolver<br/>バージョン解決]
+    H --> I[GitHubClient<br/>REST API]
+    H --> J[CacheManager<br/>二層キャッシュ]
+    I --> K[AuthManager<br/>認証管理]
+    I --> L[RateLimiter<br/>レート制限]
+
+    D --> H
+    E --> H
+    G --> H
 ```
 
 ### データフロー
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant Frontend
-    participant Backend
-    participant DB
+    participant Editor as エディタ
+    participant Parser as YamlParser
+    participant Resolver as ActionResolver
+    participant Cache as CacheManager
+    participant API as GitHubClient
+    participant Decorator as Decorator
 
-    User->>Frontend: 操作
-    Frontend->>Backend: APIリクエスト
-    Backend->>DB: クエリ
-    DB-->>Backend: 結果
-    Backend-->>Frontend: レスポンス
-    Frontend-->>User: 表示
+    Editor->>Parser: ファイルオープン/変更（debounce 500ms）
+    Parser->>Parser: 正規表現でuses:行を抽出
+    Parser-->>Resolver: ActionReference[]
+
+    loop 各リポジトリ
+        Resolver->>Cache: キャッシュチェック
+        alt キャッシュヒット
+            Cache-->>Resolver: GitHubTag[]
+        else キャッシュミス
+            Resolver->>API: GET /repos/{owner}/{repo}/tags
+            API-->>Resolver: GitHubTag[]
+            Resolver->>Cache: キャッシュ保存
+        end
+    end
+
+    Resolver->>Resolver: semver比較・ステータス判定
+    Resolver-->>Decorator: ResolvedAction[]
+    Decorator->>Editor: 行末装飾を適用
 ```
 
 ### 主要コンポーネント
 
-| コンポーネント  | 役割     | 技術         |
-| --------------- | -------- | ------------ |
-| コンポーネントA | （役割） | （使用技術） |
-| コンポーネントB | （役割） | （使用技術） |
+| コンポーネント     | 役割                                         | 技術                        |
+| ------------------ | -------------------------------------------- | --------------------------- |
+| YamlParser         | ドキュメントからuses:行を正規表現で抽出      | RegExp                      |
+| ActionResolver     | バージョン解決のオーケストレーション          | TypeScript                  |
+| GitHubClient       | GitHub REST APIによるタグ/リリース情報取得   | fetch API                   |
+| CacheManager       | メモリ+永続の二層キャッシュ管理              | Map + globalState           |
+| AuthManager        | GitHub認証トークンの優先順位付き管理          | SecretStorage + gh CLI      |
+| Decorator          | TextEditorDecorationTypeによる行末装飾        | VS Code API                 |
+| HoverProvider      | ホバー時の詳細表示とコマンドリンク            | VS Code API                 |
+| CodeLensProvider   | 行上のバージョン変更リンク（オプション）      | VS Code API                 |

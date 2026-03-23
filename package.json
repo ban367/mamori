@@ -1,0 +1,137 @@
+{
+  "name": "mamori",
+  "displayName": "Mamori - GitHub Actions Version Manager",
+  "description": "GitHub Actionsワークフローのアクションバージョンをインライン表示・管理するVS Code拡張機能",
+  "version": "0.1.0",
+  "publisher": "mamori",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:yaml",
+    "workspaceContains:.github/workflows/*.yml",
+    "workspaceContains:.github/workflows/*.yaml",
+    "workspaceContains:action.yml",
+    "workspaceContains:action.yaml"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "mamori.changeVersion",
+        "title": "Mamori: バージョンを変更"
+      },
+      {
+        "command": "mamori.toggleHash",
+        "title": "Mamori: SHA⇔タグ変換"
+      },
+      {
+        "command": "mamori.refresh",
+        "title": "Mamori: バージョン情報を更新"
+      },
+      {
+        "command": "mamori.clearCache",
+        "title": "Mamori: キャッシュをクリア"
+      },
+      {
+        "command": "mamori.setToken",
+        "title": "Mamori: GitHub トークンを設定"
+      }
+    ],
+    "configuration": {
+      "title": "Mamori",
+      "properties": {
+        "mamori.cacheTtlMinutes": {
+          "type": "number",
+          "default": 60,
+          "description": "キャッシュの有効期間（分）"
+        },
+        "mamori.enableCodeLens": {
+          "type": "boolean",
+          "default": false,
+          "description": "CodeLens表示を有効化"
+        },
+        "mamori.enableDecorations": {
+          "type": "boolean",
+          "default": true,
+          "description": "行末バージョン装飾を有効化"
+        },
+        "mamori.showMajorVersionOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "メジャーバージョンのみ表示"
+        },
+        "mamori.maxConcurrentRequests": {
+          "type": "number",
+          "default": 5,
+          "description": "同時APIリクエスト数の上限"
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "mamori.latestVersion",
+        "description": "最新バージョンの表示色",
+        "defaults": {
+          "dark": "#73c991",
+          "light": "#22863a",
+          "highContrast": "#73c991",
+          "highContrastLight": "#22863a"
+        }
+      },
+      {
+        "id": "mamori.updatableVersion",
+        "description": "更新可能バージョンの表示色",
+        "defaults": {
+          "dark": "#e2c08d",
+          "light": "#b08800",
+          "highContrast": "#e2c08d",
+          "highContrastLight": "#b08800"
+        }
+      },
+      {
+        "id": "mamori.deprecatedVersion",
+        "description": "非推奨バージョンの表示色",
+        "defaults": {
+          "dark": "#f48771",
+          "light": "#cb2431",
+          "highContrast": "#f48771",
+          "highContrastLight": "#cb2431"
+        }
+      },
+      {
+        "id": "mamori.unresolvedVersion",
+        "description": "解決不能バージョンの表示色",
+        "defaults": {
+          "dark": "#808080",
+          "light": "#6a737d",
+          "highContrast": "#808080",
+          "highContrastLight": "#6a737d"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.mjs --production",
+    "watch": "node esbuild.mjs --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/ --ext .ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "esbuild": "^0.20.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  }
+}
