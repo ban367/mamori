@@ -1,73 +1,73 @@
 import type * as vscode from "vscode";
 
-/** uses: 行から解析されたアクション参照 */
+/** Parsed action reference from a `uses:` field */
 export interface ActionReference {
-  /** 元の文字列全体（例: "actions/checkout@v4"） */
+  /** Original raw string (e.g. "actions/checkout@v4") */
   raw: string;
-  /** リポジトリオーナー */
+  /** Repository owner */
   owner: string;
-  /** リポジトリ名 */
+  /** Repository name */
   repo: string;
-  /** サブパス（例: owner/repo/path@ref の path 部分） */
+  /** Sub-path (e.g. the "path" portion in owner/repo/path@ref) */
   subPath?: string;
-  /** バージョン参照（タグ名またはコミットSHA） */
+  /** Version reference (tag name or commit SHA) */
   ref: string;
-  /** 参照の種別 */
+  /** Reference type */
   refType: RefType;
-  /** uses: 行全体の位置 */
+  /** Range of the entire `uses:` line */
   range: vscode.Range;
-  /** ref部分のみの位置（置換用） */
+  /** Range of only the ref portion (used for replacement) */
   refRange: vscode.Range;
 }
 
-/** 参照の種別 */
+/** Reference type */
 export type RefType = "tag" | "commit-sha" | "branch" | "unknown";
 
-/** バージョン解決結果 */
+/** Version resolution result */
 export interface ResolvedAction {
-  /** 元の参照 */
+  /** Original reference */
   reference: ActionReference;
-  /** 解決ステータス */
+  /** Resolution status */
   status: VersionStatus;
-  /** 現在のバージョンに対応するタグ名（SHA参照の場合に解決） */
+  /** Tag name corresponding to the current version (resolved when ref is SHA) */
   currentTag?: string;
-  /** 現在のタグに対応するSHA（タグ参照の場合） */
+  /** SHA corresponding to the current tag (resolved when ref is tag) */
   currentSha?: string;
-  /** 最新の安定バージョン */
+  /** Latest stable version */
   latestVersion?: string;
-  /** 最新バージョンのSHA */
+  /** SHA of the latest version */
   latestSha?: string;
-  /** 利用可能なタグ一覧（QuickPick用） */
+  /** Available tags (for QuickPick) */
   availableTags?: TagInfo[];
-  /** エラーメッセージ（解決失敗時） */
+  /** Error message (on resolution failure) */
   errorMessage?: string;
 }
 
-/** バージョンステータス */
+/** Version status */
 export type VersionStatus = "latest" | "updatable" | "deprecated" | "unresolved";
 
-/** タグ情報 */
+/** Tag information */
 export interface TagInfo {
-  /** タグ名（例: "v4.2.0"） */
+  /** Tag name (e.g. "v4.2.0") */
   name: string;
-  /** タグのコミットSHA */
+  /** Commit SHA of the tag */
   sha: string;
-  /** リリース日時 */
+  /** Release date */
   date?: string;
-  /** メジャーバージョンタグか（例: "v4"） */
+  /** Whether this is a major version tag (e.g. "v4") */
   isMajorTag: boolean;
 }
 
-/** キャッシュエントリ */
+/** Cache entry */
 export interface CacheEntry<T> {
   data: T;
-  /** キャッシュ作成時刻（epoch ms） */
+  /** Cache creation time (epoch ms) */
   cachedAt: number;
-  /** TTL（ミリ秒） */
+  /** TTL (milliseconds) */
   ttl: number;
 }
 
-/** GitHub APIから取得したタグ情報 */
+/** Tag information from GitHub API */
 export interface GitHubTag {
   name: string;
   commit: {
@@ -79,7 +79,7 @@ export interface GitHubTag {
   node_id: string;
 }
 
-/** GitHub APIから取得したリリース情報 */
+/** Release information from GitHub API */
 export interface GitHubRelease {
   tag_name: string;
   name: string | null;
@@ -89,7 +89,7 @@ export interface GitHubRelease {
   html_url: string;
 }
 
-/** レート制限情報 */
+/** Rate limit information */
 export interface RateLimitInfo {
   limit: number;
   remaining: number;

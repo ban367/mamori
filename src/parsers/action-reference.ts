@@ -8,7 +8,7 @@ import {
 } from "../constants";
 import type { RefType } from "../types";
 
-/** アクション参照のパース結果（位置情報なし） */
+/** Parsed action reference (without position information) */
 export interface ParsedActionRef {
   owner: string;
   repo: string;
@@ -18,8 +18,8 @@ export interface ParsedActionRef {
 }
 
 /**
- * uses: フィールドの値文字列をパースする
- * ローカルパス(`./...`)やDocker参照(`docker://...`)はnullを返す
+ * Parse a `uses:` field value string.
+ * Returns null for local paths (`./...`) and Docker references (`docker://...`).
  */
 export function parseActionReference(raw: string): ParsedActionRef | null {
   if (LOCAL_PATH_PATTERN.test(raw) || DOCKER_PATTERN.test(raw)) {
@@ -43,7 +43,7 @@ export function parseActionReference(raw: string): ParsedActionRef | null {
   };
 }
 
-/** ref文字列から参照の種別を判定する */
+/** Detect the reference type from a ref string */
 export function detectRefType(ref: string): RefType {
   if (COMMIT_SHA_PATTERN.test(ref)) {
     return "commit-sha";
@@ -51,17 +51,15 @@ export function detectRefType(ref: string): RefType {
   if (SEMVER_TAG_PATTERN.test(ref) || MAJOR_TAG_PATTERN.test(ref)) {
     return "tag";
   }
-  // "main", "master", "develop" 等はブランチの可能性が高いが、
-  // タグの可能性もあるため "unknown" とする
   return "unknown";
 }
 
-/** メジャーバージョンタグかどうかを判定する（例: "v4", "4"） */
+/** Check if a tag is a major version tag (e.g. "v4", "4") */
 export function isMajorVersionTag(tag: string): boolean {
   return MAJOR_TAG_PATTERN.test(tag);
 }
 
-/** semverタグから各バージョン番号を抽出する */
+/** Extract version numbers from a semver tag */
 export function parseSemverTag(
   tag: string,
 ): { major: number; minor: number; patch: number; prerelease?: string } | null {

@@ -4,7 +4,7 @@ import { parseDocument } from "../parsers/yaml-parser";
 import { showVersionQuickPick } from "../ui/quick-pick";
 
 /**
- * 指定行のアクションに対してQuickPickを開く（クリックハンドラから呼ばれる）
+ * Open QuickPick for the action at the specified line (called from click handler).
  */
 export async function changeVersionAtLine(
   resolver: ActionResolver,
@@ -25,8 +25,8 @@ export async function changeVersionAtLine(
 }
 
 /**
- * バージョン変更コマンド
- * uses: 行のバージョン部分を選択したタグで置換する
+ * Change version command.
+ * Replaces the version part of a `uses:` line with the selected tag.
  */
 export async function changeVersion(
   resolver: ActionResolver,
@@ -39,25 +39,24 @@ export async function changeVersion(
 
   const references = parseDocument(editor.document);
   if (references.length === 0) {
-    vscode.window.showInformationMessage("Mamori: GitHub Actions の参照が見つかりません");
+    vscode.window.showInformationMessage("Mamori: No GitHub Actions references found");
     return;
   }
 
-  // 引数でline指定がある場合はその行、なければカーソル位置
   const targetLine = args?.line ?? editor.selection.active.line;
   const reference = references.find((ref) => ref.range.start.line === targetLine);
 
   if (!reference) {
-    // カーソル行にuses行がない場合、全アクションから選択
+    // No uses line at cursor - let user pick from all actions
     const items = references.map((ref) => ({
       label: ref.raw,
-      description: `行 ${ref.range.start.line + 1}`,
+      description: `line ${ref.range.start.line + 1}`,
       ref,
     }));
 
     const selected = await vscode.window.showQuickPick(items, {
-      title: "対象のアクションを選択",
-      placeHolder: "バージョンを変更するアクションを選択してください",
+      title: "Select action",
+      placeHolder: "Select the action to change version",
     });
 
     if (!selected) {
@@ -77,7 +76,7 @@ async function changeVersionForRef(
 ): Promise<void> {
   const resolved = resolver.getResolved(reference);
   if (!resolved) {
-    vscode.window.showWarningMessage("Mamori: バージョン情報を取得中です。しばらくお待ちください。");
+    vscode.window.showWarningMessage("Mamori: Fetching version info. Please wait...");
     return;
   }
 
@@ -86,7 +85,6 @@ async function changeVersionForRef(
     return;
   }
 
-  // refRange部分を選択された値（タグ名またはSHA）で置換
   const edit = new vscode.WorkspaceEdit();
   edit.replace(editor.document.uri, reference.refRange, result.value);
   await vscode.workspace.applyEdit(edit);

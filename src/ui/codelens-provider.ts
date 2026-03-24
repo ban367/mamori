@@ -3,7 +3,7 @@ import type { ActionResolver } from "../resolvers/action-resolver";
 import { isTargetDocument, parseDocument } from "../parsers/yaml-parser";
 
 /**
- * uses: 行の上にバージョン変更リンクを表示するCodeLensプロバイダー（オプション機能）
+ * CodeLens provider that displays version change links above `uses:` lines (optional).
  */
 export class ActionCodeLensProvider implements vscode.CodeLensProvider {
   private _onDidChangeCodeLenses = new vscode.EventEmitter<void>();
@@ -36,7 +36,7 @@ export class ActionCodeLensProvider implements vscode.CodeLensProvider {
     });
   }
 
-  /** CodeLensの再描画をトリガーする */
+  /** Trigger CodeLens redraw */
   refresh(): void {
     this._onDidChangeCodeLenses.fire();
   }
@@ -45,20 +45,18 @@ export class ActionCodeLensProvider implements vscode.CodeLensProvider {
     this._onDidChangeCodeLenses.dispose();
   }
 
-  private buildTitle(
-    resolved: import("../types").ResolvedAction,
-  ): string {
-    const { status, reference, latestVersion, currentTag } = resolved;
+  private buildTitle(resolved: import("../types").ResolvedAction): string {
+    const { status, reference, latestVersion } = resolved;
 
     switch (status) {
       case "latest":
-        return `$(check) ${reference.ref} は最新`;
+        return `$(check) ${reference.ref} is latest`;
       case "updatable":
-        return `$(arrow-up) ${latestVersion} にアップデート可能`;
+        return `$(arrow-up) Update available: ${latestVersion}`;
       case "deprecated":
-        return `$(warning) ${reference.ref} は非推奨`;
+        return `$(warning) ${reference.ref} is deprecated`;
       case "unresolved":
-        return `$(question) バージョン情報なし`;
+        return `$(question) Version info unavailable`;
     }
   }
 }

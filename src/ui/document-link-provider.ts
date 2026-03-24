@@ -4,7 +4,7 @@ import { isTargetDocument, parseDocument } from "../parsers/yaml-parser";
 import { changeVersionAtLine } from "../commands/change-version";
 
 /**
- * uses: 行のバージョン部分（@以降）をクリックしたときにQuickPickを開く
+ * Opens QuickPick when the version part of a `uses:` line is double-clicked.
  */
 export class VersionClickHandler {
   private disposable: vscode.Disposable;
@@ -16,7 +16,7 @@ export class VersionClickHandler {
   }
 
   private handleSelectionChange(event: vscode.TextEditorSelectionChangeEvent): void {
-    // マウス操作のみ対象
+    // Only handle mouse clicks
     if (event.kind !== vscode.TextEditorSelectionChangeKind.Mouse) {
       return;
     }
@@ -32,7 +32,7 @@ export class VersionClickHandler {
 
     const selection = event.selections[0];
 
-    // ダブルクリック = 単語選択（selectionが空でない & 同一行内）
+    // Double-click = word selection (non-empty selection on same line)
     if (selection.isEmpty || selection.start.line !== selection.end.line) {
       return;
     }
@@ -43,7 +43,7 @@ export class VersionClickHandler {
       if (ref.refRange.start.line !== line) {
         return false;
       }
-      // 選択範囲がrefRange内に重なっているか
+      // Check if selection overlaps with refRange
       const refStart = ref.refRange.start.character;
       const refEnd = ref.refRange.end.character;
       const selStart = selection.start.character;

@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import type { ResolvedAction, VersionStatus } from "../types";
 
 /**
- * TextEditorDecorationTypeによる行末バージョン装飾管理
+ * Manages TextEditorDecorationType for inline version status display.
  */
 export class Decorator {
   private readonly decorationTypes: Record<VersionStatus, vscode.TextEditorDecorationType>;
@@ -44,9 +44,8 @@ export class Decorator {
     };
   }
 
-  /** 装飾を適用する */
+  /** Apply decorations to the editor */
   applyDecorations(editor: vscode.TextEditor, resolvedActions: ResolvedAction[]): void {
-    // ステータスごとに装飾をグループ化
     const groups: Record<VersionStatus, vscode.DecorationOptions[]> = {
       latest: [],
       updatable: [],
@@ -67,27 +66,26 @@ export class Decorator {
       groups[action.status].push(decoration);
     }
 
-    // 各ステータスの装飾を適用
     for (const status of Object.keys(groups) as VersionStatus[]) {
       editor.setDecorations(this.decorationTypes[status], groups[status]);
     }
   }
 
-  /** 全装飾をクリアする */
+  /** Clear all decorations */
   clearDecorations(editor: vscode.TextEditor): void {
     for (const decorationType of Object.values(this.decorationTypes)) {
       editor.setDecorations(decorationType, []);
     }
   }
 
-  /** リソースを解放する */
+  /** Dispose resources */
   dispose(): void {
     for (const decorationType of Object.values(this.decorationTypes)) {
       decorationType.dispose();
     }
   }
 
-  /** 表示テキストを構築する */
+  /** Build decoration display text */
   private buildDecorationText(action: ResolvedAction): string {
     const { status, latestVersion } = action;
 

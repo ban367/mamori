@@ -24,7 +24,7 @@ function log(message: string): void {
 export function activate(context: vscode.ExtensionContext): void {
   outputChannel = vscode.window.createOutputChannel("Mamori");
   context.subscriptions.push(outputChannel);
-  log("Mamori 拡張機能を起動中...");
+  log("Activating Mamori extension...");
 
   const authManager = new AuthManager(context);
   const githubClient = new GitHubClient(authManager);
@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext): void {
   resolver = new ActionResolver(githubClient, cacheManager);
   decorator = new Decorator();
 
-  // ホバープロバイダーの登録
+  // Register hover provider
   const hoverProvider = new ActionHoverProvider(resolver);
   context.subscriptions.push(
     vscode.languages.registerHoverProvider(
@@ -41,7 +41,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
   );
 
-  // CodeLensプロバイダーの登録（オプション）
+  // Register CodeLens provider (optional)
   codeLensProvider = new ActionCodeLensProvider(resolver);
   context.subscriptions.push(
     vscode.languages.registerCodeLensProvider(
@@ -50,14 +50,14 @@ export function activate(context: vscode.ExtensionContext): void {
     ),
   );
 
-  // バージョン部分ダブルクリックでQuickPickを開くハンドラー
+  // Register version click handler (double-click to open QuickPick)
   const versionClickHandler = new VersionClickHandler(resolver);
   context.subscriptions.push(versionClickHandler);
 
-  // コマンドの登録
+  // Register commands
   registerCommands(context, resolver, cacheManager, authManager);
 
-  // アクティブエディタの変更監視
+  // Watch for active editor changes
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor && isTargetDocument(editor.document)) {
@@ -66,7 +66,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // ドキュメント変更の監視（デバウンス付き）
+  // Watch for document changes (with debounce)
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((event) => {
       const editor = vscode.window.activeTextEditor;
@@ -85,22 +85,22 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
-  // 初期表示
+  // Initial decoration
   const activeEditor = vscode.window.activeTextEditor;
   if (activeEditor && isTargetDocument(activeEditor.document)) {
-    log(`初期表示: ${activeEditor.document.uri.fsPath}`);
+    log(`Initial decoration: ${activeEditor.document.uri.fsPath}`);
     updateDecorations(activeEditor);
   } else {
-    log(`初期表示スキップ: アクティブエディタなし、または対象外ファイル`);
+    log("Skipped initial decoration: no active editor or not a target file");
   }
 
-  log("Mamori 拡張機能の起動完了");
+  log("Mamori extension activated");
 }
 
 async function updateDecorations(editor: vscode.TextEditor): Promise<void> {
   try {
     const references = parseDocument(editor.document);
-    log(`パース結果: ${references.length}件のアクション参照を検出 (${editor.document.uri.fsPath})`);
+    log(`Parsed ${references.length} action reference(s) in ${editor.document.uri.fsPath}`);
 
     if (references.length === 0) {
       decorator.clearDecorations(editor);
@@ -108,20 +108,20 @@ async function updateDecorations(editor: vscode.TextEditor): Promise<void> {
     }
 
     for (const ref of references) {
-      log(`  - ${ref.raw} (${ref.refType}) 行:${ref.range.start.line + 1}`);
+      log(`  - ${ref.raw} (${ref.refType}) line:${ref.range.start.line + 1}`);
     }
 
     const resolvedActions = await resolver.resolveAll(references);
 
     for (const action of resolvedActions) {
-      log(`  解決: ${action.reference.raw} → ${action.status}${action.latestVersion ? ` (最新: ${action.latestVersion})` : ""}${action.errorMessage ? ` エラー: ${action.errorMessage}` : ""}`);
+      log(`  Resolved: ${action.reference.raw} -> ${action.status}${action.latestVersion ? ` (latest: ${action.latestVersion})` : ""}${action.errorMessage ? ` error: ${action.errorMessage}` : ""}`);
     }
 
     decorator.applyDecorations(editor, resolvedActions);
     codeLensProvider?.refresh();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    log(`エラー: ${message}`);
+    log(`Error: ${message}`);
     console.error("[Mamori]", error);
   }
 }

@@ -2,10 +2,10 @@ import { MAJOR_TAG_PATTERN, SEMVER_TAG_PATTERN } from "../constants";
 import type { GitHubTag, TagInfo } from "../types";
 
 /**
- * semverベースのバージョン比較ユーティリティ
+ * Semver-based version comparison utilities.
  */
 
-/** GitHubタグをTagInfoに変換し、semverでソートして返す */
+/** Convert GitHub tags to TagInfo, filter by semver, and sort descending */
 export function sortAndFilterTags(githubTags: GitHubTag[]): TagInfo[] {
   const tagInfos: TagInfo[] = githubTags
     .filter((tag) => SEMVER_TAG_PATTERN.test(tag.name) || MAJOR_TAG_PATTERN.test(tag.name))
@@ -18,7 +18,7 @@ export function sortAndFilterTags(githubTags: GitHubTag[]): TagInfo[] {
   return tagInfos.sort((a, b) => compareSemver(b.name, a.name));
 }
 
-/** 最新の安定バージョンタグを取得する（プレリリース除外） */
+/** Get the latest stable version tag (excluding prereleases) */
 export function getLatestStableTag(tags: TagInfo[]): TagInfo | undefined {
   return tags.find((tag) => {
     if (tag.isMajorTag) {
@@ -28,12 +28,11 @@ export function getLatestStableTag(tags: TagInfo[]): TagInfo | undefined {
     if (!match) {
       return false;
     }
-    // プレリリースを除外
     return !match[4];
   });
 }
 
-/** 指定されたメジャーバージョンに属する最新の安定タグを取得する */
+/** Get the latest stable tag within a specific major version */
 export function getLatestTagInMajor(tags: TagInfo[], majorVersion: number): TagInfo | undefined {
   return tags.find((tag) => {
     if (tag.isMajorTag) {
@@ -48,8 +47,8 @@ export function getLatestTagInMajor(tags: TagInfo[], majorVersion: number): TagI
 }
 
 /**
- * 2つのsemverバージョンを比較する
- * @returns 正の値: aが大きい, 負の値: bが大きい, 0: 等しい
+ * Compare two semver versions.
+ * @returns positive if a > b, negative if a < b, 0 if equal
  */
 export function compareSemver(a: string, b: string): number {
   const parsedA = parseSemverParts(a);
@@ -63,7 +62,7 @@ export function compareSemver(a: string, b: string): number {
   if (parsedA.minor !== parsedB.minor) return parsedA.minor - parsedB.minor;
   if (parsedA.patch !== parsedB.patch) return parsedA.patch - parsedB.patch;
 
-  // プレリリースなしが安定版でプレリリースありより優先
+  // Stable (no prerelease) takes precedence over prerelease
   if (!parsedA.prerelease && parsedB.prerelease) return 1;
   if (parsedA.prerelease && !parsedB.prerelease) return -1;
   if (parsedA.prerelease && parsedB.prerelease) {
@@ -73,7 +72,7 @@ export function compareSemver(a: string, b: string): number {
   return 0;
 }
 
-/** 指定のrefが最新かどうかを判定する */
+/** Check if the given ref is the latest version */
 export function isLatestVersion(ref: string, latestTag: TagInfo | undefined): boolean {
   if (!latestTag) {
     return false;

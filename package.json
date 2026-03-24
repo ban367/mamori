@@ -1,16 +1,37 @@
 {
   "name": "mamori",
   "displayName": "Mamori - GitHub Actions Version Manager",
-  "description": "GitHub Actionsワークフローのアクションバージョンをインライン表示・管理するVS Code拡張機能",
+  "description": "Inline version display and management for GitHub Actions in workflow files",
   "version": "0.1.0",
   "publisher": "mamori",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mamori/mamori"
+  },
+  "bugs": {
+    "url": "https://github.com/mamori/mamori/issues"
+  },
+  "homepage": "https://github.com/mamori/mamori#readme",
+  "keywords": [
+    "github-actions",
+    "version",
+    "workflow",
+    "actions",
+    "yaml",
+    "ci-cd"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
+    "Linters",
     "Other"
   ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
   "activationEvents": [
     "onLanguage:yaml",
     "workspaceContains:.github/workflows/*.yml",
@@ -23,23 +44,23 @@
     "commands": [
       {
         "command": "mamori.changeVersion",
-        "title": "Mamori: バージョンを変更"
+        "title": "Mamori: Change Version"
       },
       {
         "command": "mamori.toggleHash",
-        "title": "Mamori: SHA⇔タグ変換"
+        "title": "Mamori: Toggle SHA/Tag"
       },
       {
         "command": "mamori.refresh",
-        "title": "Mamori: バージョン情報を更新"
+        "title": "Mamori: Refresh Version Info"
       },
       {
         "command": "mamori.clearCache",
-        "title": "Mamori: キャッシュをクリア"
+        "title": "Mamori: Clear Cache"
       },
       {
         "command": "mamori.setToken",
-        "title": "Mamori: GitHub トークンを設定"
+        "title": "Mamori: Set GitHub Token"
       }
     ],
     "configuration": {
@@ -48,34 +69,34 @@
         "mamori.cacheTtlMinutes": {
           "type": "number",
           "default": 60,
-          "description": "キャッシュの有効期間（分）"
+          "description": "Cache TTL in minutes"
         },
         "mamori.enableCodeLens": {
           "type": "boolean",
           "default": false,
-          "description": "CodeLens表示を有効化"
+          "description": "Enable CodeLens display"
         },
         "mamori.enableDecorations": {
           "type": "boolean",
           "default": true,
-          "description": "行末バージョン装飾を有効化"
+          "description": "Enable inline version decorations"
         },
         "mamori.showMajorVersionOnly": {
           "type": "boolean",
           "default": false,
-          "description": "メジャーバージョンのみ表示"
+          "description": "Show major version tags only"
         },
         "mamori.maxConcurrentRequests": {
           "type": "number",
           "default": 5,
-          "description": "同時APIリクエスト数の上限"
+          "description": "Maximum number of concurrent API requests"
         }
       }
     },
     "colors": [
       {
         "id": "mamori.latestVersion",
-        "description": "最新バージョンの表示色",
+        "description": "Color for latest version indicator",
         "defaults": {
           "dark": "#73c991",
           "light": "#22863a",
@@ -85,7 +106,7 @@
       },
       {
         "id": "mamori.updatableVersion",
-        "description": "更新可能バージョンの表示色",
+        "description": "Color for updatable version indicator",
         "defaults": {
           "dark": "#e2c08d",
           "light": "#b08800",
@@ -95,7 +116,7 @@
       },
       {
         "id": "mamori.deprecatedVersion",
-        "description": "非推奨バージョンの表示色",
+        "description": "Color for deprecated version indicator",
         "defaults": {
           "dark": "#f48771",
           "light": "#cb2431",
@@ -105,7 +126,7 @@
       },
       {
         "id": "mamori.unresolvedVersion",
-        "description": "解決不能バージョンの表示色",
+        "description": "Color for unresolved version indicator",
         "defaults": {
           "dark": "#808080",
           "light": "#6a737d",

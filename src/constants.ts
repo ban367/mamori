@@ -1,37 +1,37 @@
-/** GitHub API のベースURL */
+/** GitHub API base URL */
 export const GITHUB_API_BASE = "https://api.github.com";
 
-/** uses: 行を抽出する正規表現（グローバルフラグ付き） */
+/** Regex pattern to extract `uses:` lines (with global flag) */
 export const USES_LINE_PATTERN = /^(\s*-?\s*uses:\s*)(['"]?)([^'"#\s]+)\2/gm;
 
-/** アクション参照をパースする正規表現 */
+/** Regex pattern to parse action references */
 export const ACTION_REF_PATTERN = /^([^/]+)\/([^/@]+)(?:\/([^@]+))?@(.+)$/;
 
-/** ローカルパス参照の判定パターン */
+/** Pattern to detect local path references */
 export const LOCAL_PATH_PATTERN = /^\.\//;
 
-/** Docker参照の判定パターン */
+/** Pattern to detect Docker references */
 export const DOCKER_PATTERN = /^docker:\/\//;
 
-/** コミットSHAの判定パターン（40文字または短縮形7文字以上の16進数） */
+/** Pattern to detect commit SHA (40 chars or abbreviated 7+ hex chars) */
 export const COMMIT_SHA_PATTERN = /^[0-9a-f]{7,40}$/i;
 
-/** semverタグの判定パターン（v付きも対応） */
+/** Pattern to detect semver tags (with or without "v" prefix) */
 export const SEMVER_TAG_PATTERN = /^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?(?:-(.+))?$/;
 
-/** メジャーバージョンタグの判定パターン（v1, v2 等） */
+/** Pattern to detect major version tags (e.g. v1, v2) */
 export const MAJOR_TAG_PATTERN = /^v?\d+$/;
 
-/** デフォルトのキャッシュTTL（ミリ秒） */
+/** Default cache TTL (milliseconds) */
 export const DEFAULT_CACHE_TTL_MS = 60 * 60 * 1000;
 
-/** デバウンス待機時間（ミリ秒） */
+/** Debounce delay (milliseconds) */
 export const DEBOUNCE_DELAY_MS = 500;
 
-/** GitHub APIのページサイズ */
+/** GitHub API page size */
 export const API_PAGE_SIZE = 100;
 
-/** 対象ファイルのglobパターン */
+/** Glob patterns for target files */
 export const TARGET_FILE_GLOBS = [
   "**/.github/workflows/*.yml",
   "**/.github/workflows/*.yaml",

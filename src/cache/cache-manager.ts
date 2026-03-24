@@ -1,13 +1,12 @@
 import * as vscode from "vscode";
 import type { CacheEntry, GitHubTag } from "../types";
-import { DEFAULT_CACHE_TTL_MS } from "../constants";
 
 const GLOBAL_STATE_KEY = "mamori.cache";
 
 /**
- * 二層キャッシュマネージャー
- * - メモリキャッシュ: セッション中の高速アクセス
- * - 永続キャッシュ: globalStateによるVS Code再起動後の保持
+ * Two-layer cache manager.
+ * - Memory cache: fast access during session
+ * - Persistent cache: survives VS Code restarts via globalState
  */
 export class CacheManager {
   private memoryCache = new Map<string, CacheEntry<GitHubTag[]>>();
@@ -18,7 +17,7 @@ export class CacheManager {
     this.loadFromGlobalState();
   }
 
-  /** キャッシュからタグ一覧を取得する */
+  /** Get tags from cache */
   get(owner: string, repo: string): GitHubTag[] | undefined {
     const key = this.buildKey(owner, repo);
     const entry = this.memoryCache.get(key);
@@ -35,8 +34,8 @@ export class CacheManager {
   }
 
   /**
-   * 期限切れでもキャッシュデータを返す（stale-while-revalidateパターン）
-   * オフライン時に使用
+   * Get cached data even if expired (stale-while-revalidate pattern).
+   * Used when offline.
    */
   getStale(owner: string, repo: string): GitHubTag[] | undefined {
     const key = this.buildKey(owner, repo);
@@ -44,7 +43,7 @@ export class CacheManager {
     return entry?.data;
   }
 
-  /** キャッシュにタグ一覧を保存する */
+  /** Store tags in cache */
   set(owner: string, repo: string, tags: GitHubTag[]): void {
     const key = this.buildKey(owner, repo);
     const ttl = this.getTtl();
@@ -58,20 +57,20 @@ export class CacheManager {
     this.saveToGlobalState();
   }
 
-  /** 特定のリポジトリのキャッシュを削除する */
+  /** Delete cache for a specific repository */
   delete(owner: string, repo: string): void {
     const key = this.buildKey(owner, repo);
     this.memoryCache.delete(key);
     this.saveToGlobalState();
   }
 
-  /** 全キャッシュをクリアする */
+  /** Clear all caches */
   clearAll(): void {
     this.memoryCache.clear();
     this.saveToGlobalState();
   }
 
-  /** キャッシュされているリポジトリ数を返す */
+  /** Number of cached repositories */
   get size(): number {
     return this.memoryCache.size;
   }

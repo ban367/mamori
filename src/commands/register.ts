@@ -7,7 +7,7 @@ import { toggleHash } from "./toggle-hash";
 import { refresh, clearCache } from "./refresh";
 
 /**
- * 全コマンドを登録する
+ * Register all commands.
  */
 export function registerCommands(
   context: vscode.ExtensionContext,
@@ -30,22 +30,22 @@ export function registerCommands(
 
     vscode.commands.registerCommand("mamori.setToken", async () => {
       const token = await vscode.window.showInputBox({
-        title: "Mamori: GitHub トークンを設定",
-        prompt: "GitHub Personal Access Token を入力してください",
+        title: "Mamori: Set GitHub Token",
+        prompt: "Enter your GitHub Personal Access Token",
         password: true,
         placeHolder: "ghp_xxxxxxxxxxxxxxxxxxxx",
       });
 
       if (token === undefined) {
-        return; // キャンセル
+        return;
       }
 
       if (token === "") {
         await authManager.deleteToken();
-        vscode.window.showInformationMessage("Mamori: GitHub トークンを削除しました");
+        vscode.window.showInformationMessage("Mamori: GitHub token removed");
       } else {
         await authManager.setToken(token);
-        vscode.window.showInformationMessage("Mamori: GitHub トークンを設定しました");
+        vscode.window.showInformationMessage("Mamori: GitHub token saved");
       }
     }),
   );

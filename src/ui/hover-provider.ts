@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import type { ActionResolver } from "../resolvers/action-resolver";
-import type { ActionReference, ResolvedAction } from "../types";
+import type { ResolvedAction } from "../types";
 import { parseDocument } from "../parsers/yaml-parser";
 
 /**
- * uses: 行にホバーした際にバージョン詳細とコマンドリンクを表示する
+ * Displays version details and command links on hover over `uses:` lines.
  */
 export class ActionHoverProvider implements vscode.HoverProvider {
   constructor(private readonly resolver: ActionResolver) {}
@@ -13,16 +13,13 @@ export class ActionHoverProvider implements vscode.HoverProvider {
     document: vscode.TextDocument,
     position: vscode.Position,
   ): vscode.Hover | undefined {
-    // ドキュメント内のuses行を解析
     const references = parseDocument(document);
 
-    // ホバー位置に対応するActionReferenceを検索
     const reference = references.find((ref) => ref.range.contains(position));
     if (!reference) {
       return undefined;
     }
 
-    // 解決結果を取得
     const resolved = this.resolver.getResolved(reference);
     if (!resolved) {
       return undefined;
@@ -40,36 +37,36 @@ export class ActionHoverProvider implements vscode.HoverProvider {
     md.isTrusted = true;
     md.supportThemeIcons = true;
 
-    // ヘッダー
+    // Header
     const repoPath = reference.subPath
       ? `${reference.owner}/${reference.repo}/${reference.subPath}`
       : `${reference.owner}/${reference.repo}`;
     md.appendMarkdown(`**${repoPath}** @ \`${reference.ref}\`\n\n`);
 
-    // ステータス表示
+    // Status
     switch (status) {
       case "latest":
-        md.appendMarkdown(`$(check) **最新バージョン**\n\n`);
+        md.appendMarkdown(`$(check) **Latest version**\n\n`);
         break;
       case "updatable":
-        md.appendMarkdown(`$(arrow-up) **アップデート可能**\n\n`);
+        md.appendMarkdown(`$(arrow-up) **Update available**\n\n`);
         break;
       case "deprecated":
-        md.appendMarkdown(`$(warning) **非推奨**\n\n`);
+        md.appendMarkdown(`$(warning) **Deprecated**\n\n`);
         break;
       case "unresolved":
-        md.appendMarkdown(`$(question) **バージョン情報を取得できません**\n\n`);
+        md.appendMarkdown(`$(question) **Unable to resolve version**\n\n`);
         if (resolved.errorMessage) {
           md.appendMarkdown(`${resolved.errorMessage}\n\n`);
         }
         return md;
     }
 
-    // 詳細情報テーブル
-    md.appendMarkdown(`| 項目 | 値 |\n|------|------|\n`);
+    // Details table
+    md.appendMarkdown(`| | |\n|------|------|\n`);
 
     if (reference.refType === "commit-sha" && currentTag) {
-      md.appendMarkdown(`| 対応タグ | \`${currentTag}\` |\n`);
+      md.appendMarkdown(`| Tag | \`${currentTag}\` |\n`);
     }
 
     if (currentSha) {
@@ -77,29 +74,28 @@ export class ActionHoverProvider implements vscode.HoverProvider {
     }
 
     if (latestVersion) {
-      md.appendMarkdown(`| 最新バージョン | \`${latestVersion}\` |\n`);
+      md.appendMarkdown(`| Latest | \`${latestVersion}\` |\n`);
     }
 
     if (latestSha) {
-      md.appendMarkdown(`| 最新SHA | \`${latestSha.substring(0, 12)}\` |\n`);
+      md.appendMarkdown(`| Latest SHA | \`${latestSha.substring(0, 12)}\` |\n`);
     }
 
     md.appendMarkdown(`\n`);
 
-    // コマンドリンク
+    // Command links
     const refArg = encodeURIComponent(JSON.stringify({ line: reference.range.start.line }));
     md.appendMarkdown(
-      `[$(versions) バージョンを変更](command:mamori.changeVersion?${refArg})`,
+      `[$(versions) Change version](command:mamori.changeVersion?${refArg})`,
     );
     md.appendMarkdown(` | `);
     md.appendMarkdown(
-      `[$(symbol-key) SHA⇔タグ変換](command:mamori.toggleHash?${refArg})`,
+      `[$(symbol-key) Toggle SHA/Tag](command:mamori.toggleHash?${refArg})`,
     );
 
-    // 利用可能なタグ数
     if (availableTags && availableTags.length > 0) {
       md.appendMarkdown(`\n\n---\n`);
-      md.appendMarkdown(`*${availableTags.length}個のバージョンが利用可能*`);
+      md.appendMarkdown(`*${availableTags.length} version(s) available*`);
     }
 
     return md;

@@ -4,8 +4,8 @@ import { execSync } from "child_process";
 const SECRET_KEY = "mamori.githubToken";
 
 /**
- * GitHub認証トークンの管理
- * 優先順位: SecretStorage PAT → gh auth token → GITHUB_TOKEN環境変数 → 認証なし
+ * GitHub authentication token manager.
+ * Priority: SecretStorage PAT -> gh auth token -> GITHUB_TOKEN env var -> unauthenticated
  */
 export class AuthManager {
   private readonly secretStorage: vscode.SecretStorage;
@@ -14,47 +14,47 @@ export class AuthManager {
     this.secretStorage = context.secrets;
   }
 
-  /** トークンを取得する（優先順位に従う） */
+  /** Get authentication token (following priority order) */
   async getToken(): Promise<string | undefined> {
-    // 1. SecretStorageに保存されたPAT
+    // 1. PAT stored in SecretStorage
     const storedToken = await this.secretStorage.get(SECRET_KEY);
     if (storedToken) {
       return storedToken;
     }
 
-    // 2. GitHub CLIのトークン
+    // 2. GitHub CLI token
     const ghToken = this.getGhCliToken();
     if (ghToken) {
       return ghToken;
     }
 
-    // 3. 環境変数
+    // 3. Environment variable
     const envToken = process.env.GITHUB_TOKEN;
     if (envToken) {
       return envToken;
     }
 
-    // 4. 認証なし
+    // 4. Unauthenticated
     return undefined;
   }
 
-  /** SecretStorageにトークンを保存する */
+  /** Store token in SecretStorage */
   async setToken(token: string): Promise<void> {
     await this.secretStorage.store(SECRET_KEY, token);
   }
 
-  /** SecretStorageからトークンを削除する */
+  /** Delete token from SecretStorage */
   async deleteToken(): Promise<void> {
     await this.secretStorage.delete(SECRET_KEY);
   }
 
-  /** トークンが設定されているかどうか */
+  /** Check if a token is available */
   async hasToken(): Promise<boolean> {
     const token = await this.getToken();
     return token !== undefined;
   }
 
-  /** GitHub CLIからトークンを取得する */
+  /** Get token from GitHub CLI */
   private getGhCliToken(): string | undefined {
     try {
       const token = execSync("gh auth token", {

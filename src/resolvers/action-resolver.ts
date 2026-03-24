@@ -1,4 +1,4 @@
-import type { ActionReference, ResolvedAction, GitHubTag, VersionStatus } from "../types";
+import type { ActionReference, ResolvedAction, GitHubTag } from "../types";
 import type { GitHubClient } from "../api/github-client";
 import type { CacheManager } from "../cache/cache-manager";
 import { isMajorVersionTag, parseSemverTag } from "../parsers/action-reference";
@@ -11,10 +11,10 @@ import {
 import * as vscode from "vscode";
 
 /**
- * アクションのバージョン解決を統合的に行うリゾルバー
+ * Orchestrates version resolution for action references.
  */
 export class ActionResolver {
-  /** 最新の解決結果（HoverProvider等から参照） */
+  /** Cached resolution results (referenced by HoverProvider, etc.) */
   private resolvedCache = new Map<string, ResolvedAction>();
   private concurrencyLimit: number;
 
@@ -26,9 +26,9 @@ export class ActionResolver {
     this.concurrencyLimit = config.get<number>("maxConcurrentRequests", 5);
   }
 
-  /** 複数のActionReferenceを一括で解決する */
+  /** Resolve multiple ActionReferences in batch */
   async resolveAll(references: ActionReference[]): Promise<ResolvedAction[]> {
-    // 同一リポジトリのタグ取得を重複させないようグループ化
+    // Group by repository to avoid duplicate tag fetches
     const repoGroups = new Map<string, ActionReference[]>();
     for (const ref of references) {
       const key = `${ref.owner}/${ref.repo}`;
@@ -37,7 +37,7 @@ export class ActionResolver {
       repoGroups.set(key, group);
     }
 
-    // 並行制限付きでリポジトリごとにタグを取得
+    // Fetch tags per repository with concurrency limit
     const repoKeys = Array.from(repoGroups.keys());
     const tagsByRepo = new Map<string, GitHubTag[]>();
 
@@ -55,7 +55,7 @@ export class ActionResolver {
       }
     }
 
-    // 各参照を解決
+    // Resolve each reference
     const resolved: ResolvedAction[] = [];
     for (const ref of references) {
       const key = `${ref.owner}/${ref.repo}`;
@@ -68,13 +68,13 @@ export class ActionResolver {
     return resolved;
   }
 
-  /** 単一のActionReferenceを解決する */
+  /** Resolve a single ActionReference */
   resolveOne(reference: ActionReference, githubTags: GitHubTag[]): ResolvedAction {
     if (githubTags.length === 0) {
       return {
         reference,
         status: "unresolved",
-        errorMessage: "タグ情報を取得できませんでした",
+        errorMessage: "Failed to retrieve tag information",
       };
     }
 
@@ -100,12 +100,12 @@ export class ActionResolver {
     return result;
   }
 
-  /** キャッシュから解決結果を取得する */
+  /** Get cached resolution result */
   getResolved(reference: ActionReference): ResolvedAction | undefined {
     return this.resolvedCache.get(this.buildRefKey(reference));
   }
 
-  /** SHA参照を解決する */
+  /** Resolve a SHA reference */
   private resolveShaRef(
     reference: ActionReference,
     githubTags: GitHubTag[],
@@ -113,7 +113,6 @@ export class ActionResolver {
     latestStable: ReturnType<typeof getLatestStableTag>,
     result: ResolvedAction,
   ): ResolvedAction {
-    // SHAに対応するタグを検索
     const matchingTag = githubTags.find(
       (t) => t.commit.sha === reference.ref || t.commit.sha.startsWith(reference.ref),
     );
@@ -136,7 +135,7 @@ export class ActionResolver {
     return result;
   }
 
-  /** タグ参照を解決する */
+  /** Resolve a tag reference */
   private resolveTagRef(
     reference: ActionReference,
     githubTags: GitHubTag[],
@@ -144,13 +143,12 @@ export class ActionResolver {
     latestStable: ReturnType<typeof getLatestStableTag>,
     result: ResolvedAction,
   ): ResolvedAction {
-    // タグに対応するSHAを検索
     const matchingGhTag = githubTags.find((t) => t.name === reference.ref);
     if (matchingGhTag) {
       result.currentSha = matchingGhTag.commit.sha;
     }
 
-    // メジャーバージョンタグの場合（v4 等）
+    // Major version tag (e.g. v4)
     if (isMajorVersionTag(reference.ref)) {
       const semver = parseSemverTag(reference.ref);
       if (semver) {
@@ -169,7 +167,7 @@ export class ActionResolver {
       return result;
     }
 
-    // 通常のsemverタグの場合
+    // Standard semver tag
     if (latestStable) {
       if (isLatestVersion(reference.ref, latestStable)) {
         result.status = "latest";
@@ -183,15 +181,13 @@ export class ActionResolver {
     return result;
   }
 
-  /** リポジトリのタグをキャッシュ付きで取得する */
+  /** Fetch tags with cache support */
   private async fetchTags(owner: string, repo: string): Promise<GitHubTag[]> {
-    // キャッシュチェック
     const cached = this.cacheManager.get(owner, repo);
     if (cached) {
       return cached;
     }
 
-    // API呼び出し
     try {
       const tags = await this.githubClient.getTags(owner, repo);
       if (tags.length > 0) {
@@ -199,7 +195,6 @@ export class ActionResolver {
       }
       return tags;
     } catch {
-      // オフライン時はstaleキャッシュを使用
       const stale = this.cacheManager.getStale(owner, repo);
       return stale ?? [];
     }

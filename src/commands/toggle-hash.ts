@@ -4,8 +4,8 @@ import { parseDocument } from "../parsers/yaml-parser";
 import { showHashToggleQuickPick } from "../ui/quick-pick";
 
 /**
- * SHA⇔タグ変換コマンド
- * uses: 行のバージョン部分をSHA/タグで相互変換する
+ * Toggle SHA/Tag command.
+ * Converts the version part of a `uses:` line between SHA and tag name.
  */
 export async function toggleHash(
   resolver: ActionResolver,
@@ -22,14 +22,14 @@ export async function toggleHash(
 
   if (!reference) {
     vscode.window.showInformationMessage(
-      "Mamori: カーソル行にGitHub Actionsの参照が見つかりません",
+      "Mamori: No GitHub Actions reference found at cursor line",
     );
     return;
   }
 
   const resolved = resolver.getResolved(reference);
   if (!resolved) {
-    vscode.window.showWarningMessage("Mamori: バージョン情報を取得中です。しばらくお待ちください。");
+    vscode.window.showWarningMessage("Mamori: Fetching version info. Please wait...");
     return;
   }
 
@@ -38,7 +38,6 @@ export async function toggleHash(
     return;
   }
 
-  // refRange部分を新しい値で置換
   const edit = new vscode.WorkspaceEdit();
   edit.replace(editor.document.uri, reference.refRange, result.value);
   await vscode.workspace.applyEdit(edit);
