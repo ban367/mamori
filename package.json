@@ -1,0 +1,153 @@
+{
+  "name": "mamori",
+  "displayName": "Mamori - GitHub Actions Version Manager",
+  "description": "Inline version display and management for GitHub Actions in workflow files",
+  "version": "0.1.0",
+  "publisher": "mamori",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mamori/mamori"
+  },
+  "bugs": {
+    "url": "https://github.com/mamori/mamori/issues"
+  },
+  "homepage": "https://github.com/mamori/mamori#readme",
+  "keywords": [
+    "github-actions",
+    "version",
+    "workflow",
+    "actions",
+    "yaml",
+    "ci-cd"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onLanguage:yaml",
+    "workspaceContains:.github/workflows/*.yml",
+    "workspaceContains:.github/workflows/*.yaml",
+    "workspaceContains:action.yml",
+    "workspaceContains:action.yaml"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "mamori.changeVersion",
+        "title": "Mamori: Change Version"
+      },
+      {
+        "command": "mamori.toggleHash",
+        "title": "Mamori: Toggle SHA/Tag"
+      },
+      {
+        "command": "mamori.refresh",
+        "title": "Mamori: Refresh Version Info"
+      },
+      {
+        "command": "mamori.clearCache",
+        "title": "Mamori: Clear Cache"
+      },
+      {
+        "command": "mamori.setToken",
+        "title": "Mamori: Set GitHub Token"
+      }
+    ],
+    "configuration": {
+      "title": "Mamori",
+      "properties": {
+        "mamori.cacheTtlMinutes": {
+          "type": "number",
+          "default": 60,
+          "description": "Cache TTL in minutes"
+        },
+        "mamori.enableCodeLens": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable CodeLens display"
+        },
+        "mamori.enableDecorations": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable inline version decorations"
+        },
+        "mamori.maxConcurrentRequests": {
+          "type": "number",
+          "default": 5,
+          "description": "Maximum number of concurrent API requests"
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "mamori.latestVersion",
+        "description": "Color for latest version indicator",
+        "defaults": {
+          "dark": "#73c991",
+          "light": "#22863a",
+          "highContrast": "#73c991",
+          "highContrastLight": "#22863a"
+        }
+      },
+      {
+        "id": "mamori.updatableVersion",
+        "description": "Color for updatable version indicator",
+        "defaults": {
+          "dark": "#e2c08d",
+          "light": "#b08800",
+          "highContrast": "#e2c08d",
+          "highContrastLight": "#b08800"
+        }
+      },
+      {
+        "id": "mamori.deprecatedVersion",
+        "description": "Color for deprecated version indicator",
+        "defaults": {
+          "dark": "#f48771",
+          "light": "#cb2431",
+          "highContrast": "#f48771",
+          "highContrastLight": "#cb2431"
+        }
+      },
+      {
+        "id": "mamori.unresolvedVersion",
+        "description": "Color for unresolved version indicator",
+        "defaults": {
+          "dark": "#808080",
+          "light": "#6a737d",
+          "highContrast": "#808080",
+          "highContrastLight": "#6a737d"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.mjs --production",
+    "watch": "node esbuild.mjs --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src/ --ext .ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "esbuild": "^0.20.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0"
+  }
+}

@@ -1,4 +1,4 @@
-# Template
+# Mamori - GitHub Actions Version Manager
 
 ## 言語設定
 
@@ -8,38 +8,37 @@
 
 ## プロジェクト概要
 
-<!-- 記入例:
-このプロジェクトは〇〇サービスのバックエンド API です。
-ユーザー認証・データ管理・通知配信の機能を提供します。
--->
+GitHub Actionsワークフローファイル内のアクションバージョンをインライン表示・管理するVS Code拡張機能。
+行末装飾でバージョンステータスを表示し、QuickPickによるバージョン切り替えやSHA⇔タグ変換を提供する。
 
 ## ディレクトリ構造
 
-- `docs/` - 詳細ドキュメント
-
-<!-- 記入例:
-- `src/` - アプリケーションのソースコード
-- `tests/` - テストコード
-- `docs/` - 詳細ドキュメント
-- `scripts/` - ビルド・デプロイスクリプト
--->
+- `src/` - 拡張機能のソースコード（TypeScript）
+- `src/parsers/` - YAML解析・アクション参照パーサー
+- `src/resolvers/` - バージョン解決・semver比較
+- `src/api/` - GitHub REST APIクライアント
+- `src/auth/` - 認証トークン管理
+- `src/cache/` - 二層キャッシュ（メモリ+永続）
+- `src/ui/` - 装飾・ホバー・CodeLens・QuickPick
+- `src/commands/` - コマンド登録・実行
+- `test/` - テストコード
+- `docs/` - 設計ドキュメント
 
 ## 開発コマンド
 
-<!-- 記入例:
-- `make dev` - 開発サーバー起動
-- `make test` - テスト実行
-- `make lint` - 静的解析
-- `make build` - ビルド
--->
+- `npm run build` - プロダクションビルド（esbuild）
+- `npm run watch` - 監視モードビルド
+- `npm test` - テスト実行（Vitest）
+- `npm run test:watch` - テスト監視モード
+- `npx tsc --noEmit` - 型チェック
+- F5 - Extension Development Host起動（VS Code内）
 
 ## 設計方針
 
-<!-- 記入例:
-- シンプルさを優先し、過度な抽象化を避ける
-- 外部依存は最小限に留める
-- テスタビリティを考慮した設計にする
--->
+- 外部依存を最小限に留める（YAMLパースは正規表現、HTTPは組み込みfetch）
+- セキュリティを優先（トークンはSecretStorage、ログに含めない）
+- オフライン耐性（stale-while-revalidateキャッシュ）
+- パフォーマンス（デバウンス、並行制限、差分更新）
 
 ## 詳細ドキュメント
 
