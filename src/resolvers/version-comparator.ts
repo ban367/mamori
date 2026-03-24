@@ -66,7 +66,43 @@ export function compareSemver(a: string, b: string): number {
   if (!parsedA.prerelease && parsedB.prerelease) return 1;
   if (parsedA.prerelease && !parsedB.prerelease) return -1;
   if (parsedA.prerelease && parsedB.prerelease) {
-    return parsedA.prerelease.localeCompare(parsedB.prerelease);
+    return comparePrerelease(parsedA.prerelease, parsedB.prerelease);
+  }
+
+  return 0;
+}
+
+/**
+ * Compare prerelease strings according to SemVer rules.
+ * Split by `.` and compare numeric parts numerically.
+ */
+function comparePrerelease(a: string, b: string): number {
+  const aIds = a.split(".");
+  const bIds = b.split(".");
+  const len = Math.max(aIds.length, bIds.length);
+
+  for (let i = 0; i < len; i += 1) {
+    const aId = aIds[i];
+    const bId = bIds[i];
+
+    if (aId === undefined && bId === undefined) return 0;
+    if (aId === undefined) return -1;
+    if (bId === undefined) return 1;
+
+    const aNum = /^\d+$/.test(aId);
+    const bNum = /^\d+$/.test(bId);
+
+    if (aNum && bNum) {
+      const diff = parseInt(aId, 10) - parseInt(bId, 10);
+      if (diff !== 0) return diff;
+    } else if (aNum && !bNum) {
+      return -1;
+    } else if (!aNum && bNum) {
+      return 1;
+    } else {
+      const cmp = aId.localeCompare(bId);
+      if (cmp !== 0) return cmp;
+    }
   }
 
   return 0;

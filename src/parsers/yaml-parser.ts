@@ -20,12 +20,13 @@ export function parseDocument(document: vscode.TextDocument): ActionReference[] 
       continue;
     }
 
-    const lineIndex = text.substring(0, match.index).split("\n").length - 1;
+    const lineIndex = document.positionAt(match.index).line;
     const prefix = match[1];
     const quote = match[2];
 
     const lineStart = new vscode.Position(lineIndex, 0);
-    const lineEnd = new vscode.Position(lineIndex, match[0].length);
+    const lineTextLength = document.lineAt(lineIndex).text.length;
+    const lineEnd = new vscode.Position(lineIndex, lineTextLength);
     const range = new vscode.Range(lineStart, lineEnd);
 
     const refStartCol = prefix.length + quote.length + raw.indexOf("@") + 1;

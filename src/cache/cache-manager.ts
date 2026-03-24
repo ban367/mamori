@@ -98,6 +98,10 @@ export class CacheManager {
 
   private saveToGlobalState(): void {
     const obj = Object.fromEntries(this.memoryCache.entries());
-    this.globalState.update(GLOBAL_STATE_KEY, obj);
+    void this.globalState
+      .update(GLOBAL_STATE_KEY, obj)
+      .then(undefined, (error) => {
+        console.error("[mamori] Failed to persist cache to globalState:", error);
+      });
   }
 }

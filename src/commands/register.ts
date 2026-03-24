@@ -14,6 +14,7 @@ export function registerCommands(
   resolver: ActionResolver,
   cacheManager: CacheManager,
   authManager: AuthManager,
+  onRefreshed?: () => void,
 ): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("mamori.changeVersion", (args?: { line: number }) =>
@@ -24,7 +25,7 @@ export function registerCommands(
       toggleHash(resolver, args),
     ),
 
-    vscode.commands.registerCommand("mamori.refresh", () => refresh(cacheManager)),
+    vscode.commands.registerCommand("mamori.refresh", () => refresh(cacheManager, onRefreshed)),
 
     vscode.commands.registerCommand("mamori.clearCache", () => clearCache(cacheManager)),
 

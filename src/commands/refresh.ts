@@ -5,12 +5,14 @@ import type { CacheManager } from "../cache/cache-manager";
  * Manual refresh command.
  * Clears cache and re-fetches version info.
  */
-export async function refresh(cacheManager: CacheManager): Promise<void> {
+export async function refresh(
+  cacheManager: CacheManager,
+  onRefreshed?: () => void,
+): Promise<void> {
   cacheManager.clearAll();
 
-  const editor = vscode.window.activeTextEditor;
-  if (editor) {
-    await vscode.commands.executeCommand("editor.action.forceRetokenize");
+  if (onRefreshed) {
+    onRefreshed();
   }
 
   vscode.window.showInformationMessage("Mamori: Version info refreshed");

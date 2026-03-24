@@ -23,11 +23,19 @@ export class ActionResolver {
     private readonly cacheManager: CacheManager,
   ) {
     const config = vscode.workspace.getConfiguration("mamori");
-    this.concurrencyLimit = config.get<number>("maxConcurrentRequests", 5);
+    this.concurrencyLimit = Math.max(1, config.get<number>("maxConcurrentRequests", 5));
   }
 
   /** Resolve multiple ActionReferences in batch */
   async resolveAll(references: ActionReference[]): Promise<ResolvedAction[]> {
+    // Prune stale entries from resolvedCache
+    const currentKeys = new Set(references.map((ref) => this.buildRefKey(ref)));
+    for (const key of this.resolvedCache.keys()) {
+      if (!currentKeys.has(key)) {
+        this.resolvedCache.delete(key);
+      }
+    }
+
     // Group by repository to avoid duplicate tag fetches
     const repoGroups = new Map<string, ActionReference[]>();
     for (const ref of references) {

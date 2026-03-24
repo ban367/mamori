@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { execSync } from "child_process";
+import { execFile } from "child_process";
 
 const SECRET_KEY = "mamori.githubToken";
 
@@ -9,6 +9,7 @@ const SECRET_KEY = "mamori.githubToken";
  */
 export class AuthManager {
   private readonly secretStorage: vscode.SecretStorage;
+  private ghCliTokenCache: string | undefined | null = null;
 
   constructor(context: vscode.ExtensionContext) {
     this.secretStorage = context.secrets;
@@ -22,8 +23,8 @@ export class AuthManager {
       return storedToken;
     }
 
-    // 2. GitHub CLI token
-    const ghToken = this.getGhCliToken();
+    // 2. GitHub CLI token (async, cached for session)
+    const ghToken = await this.getGhCliToken();
     if (ghToken) {
       return ghToken;
     }
@@ -54,17 +55,27 @@ export class AuthManager {
     return token !== undefined;
   }
 
-  /** Get token from GitHub CLI */
-  private getGhCliToken(): string | undefined {
-    try {
-      const token = execSync("gh auth token", {
-        encoding: "utf-8",
-        timeout: 5000,
-        stdio: ["pipe", "pipe", "pipe"],
-      }).trim();
-      return token || undefined;
-    } catch {
-      return undefined;
+  /** Get token from GitHub CLI (async, cached for session) */
+  private async getGhCliToken(): Promise<string | undefined> {
+    if (this.ghCliTokenCache !== null) {
+      return this.ghCliTokenCache;
     }
+
+    try {
+      const token = await new Promise<string>((resolve, reject) => {
+        execFile("gh", ["auth", "token"], { timeout: 5000 }, (error, stdout) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(stdout.trim());
+          }
+        });
+      });
+      this.ghCliTokenCache = token || undefined;
+    } catch {
+      this.ghCliTokenCache = undefined;
+    }
+
+    return this.ghCliTokenCache;
   }
 }

@@ -37,11 +37,15 @@ export class ActionHoverProvider implements vscode.HoverProvider {
     md.isTrusted = true;
     md.supportThemeIcons = true;
 
-    // Header
+    // Header — escape user-derived values to prevent Markdown injection
     const repoPath = reference.subPath
       ? `${reference.owner}/${reference.repo}/${reference.subPath}`
       : `${reference.owner}/${reference.repo}`;
-    md.appendMarkdown(`**${repoPath}** @ \`${reference.ref}\`\n\n`);
+    md.appendMarkdown(`**`);
+    md.appendText(repoPath);
+    md.appendMarkdown(`** @ \``);
+    md.appendText(reference.ref);
+    md.appendMarkdown(`\`\n\n`);
 
     // Status
     switch (status) {

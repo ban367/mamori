@@ -81,11 +81,6 @@
           "default": true,
           "description": "Enable inline version decorations"
         },
-        "mamori.showMajorVersionOnly": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show major version tags only"
-        },
         "mamori.maxConcurrentRequests": {
           "type": "number",
           "default": 5,

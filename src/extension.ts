@@ -55,7 +55,12 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(versionClickHandler);
 
   // Register commands
-  registerCommands(context, resolver, cacheManager, authManager);
+  registerCommands(context, resolver, cacheManager, authManager, () => {
+    const editor = vscode.window.activeTextEditor;
+    if (editor && isTargetDocument(editor.document)) {
+      updateDecorations(editor);
+    }
+  });
 
   // Watch for active editor changes
   context.subscriptions.push(
@@ -100,24 +105,20 @@ export function activate(context: vscode.ExtensionContext): void {
 async function updateDecorations(editor: vscode.TextEditor): Promise<void> {
   try {
     const references = parseDocument(editor.document);
-    log(`Parsed ${references.length} action reference(s) in ${editor.document.uri.fsPath}`);
 
     if (references.length === 0) {
       decorator.clearDecorations(editor);
       return;
     }
 
-    for (const ref of references) {
-      log(`  - ${ref.raw} (${ref.refType}) line:${ref.range.start.line + 1}`);
-    }
-
     const resolvedActions = await resolver.resolveAll(references);
 
-    for (const action of resolvedActions) {
-      log(`  Resolved: ${action.reference.raw} -> ${action.status}${action.latestVersion ? ` (latest: ${action.latestVersion})` : ""}${action.errorMessage ? ` error: ${action.errorMessage}` : ""}`);
+    const config = vscode.workspace.getConfiguration("mamori");
+    if (config.get<boolean>("enableDecorations", true)) {
+      decorator.applyDecorations(editor, resolvedActions);
+    } else {
+      decorator.clearDecorations(editor);
     }
-
-    decorator.applyDecorations(editor, resolvedActions);
     codeLensProvider?.refresh();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

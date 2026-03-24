@@ -3,10 +3,22 @@ import { parseDocument, isTargetDocument } from "../../../src/parsers/yaml-parse
 
 /** テスト用の簡易TextDocumentモック */
 function createMockDocument(text: string, filePath = "/.github/workflows/ci.yml") {
+  const lines = text.split("\n");
   return {
     getText: () => text,
     uri: { fsPath: filePath },
     languageId: "yaml",
+    positionAt: (offset: number) => {
+      let remaining = offset;
+      for (let i = 0; i < lines.length; i++) {
+        if (remaining <= lines[i].length) {
+          return { line: i, character: remaining };
+        }
+        remaining -= lines[i].length + 1; // +1 for newline
+      }
+      return { line: lines.length - 1, character: 0 };
+    },
+    lineAt: (line: number) => ({ text: lines[line] ?? "" }),
   } as any;
 }
 
