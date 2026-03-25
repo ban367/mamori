@@ -138,9 +138,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src/ --ext .ts",
-    "package": "vsce package"
+    "package": "npx @vscode/vsce package"
   },
   "devDependencies": {
+    "@vscode/vsce": "^3.0.0",
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",

@@ -1,0 +1,46 @@
+# PRでソースコード変更時にlint/test/型チェックを実行する
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "test/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - ".eslintrc.json"
+      - "esbuild.mjs"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: lint, typecheck & test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: lint
+        run: npm run lint
+
+      - name: type check
+        run: npx tsc --noEmit
+
+      - name: test
+        run: npm test
