@@ -36,7 +36,8 @@ jobs:
       - name: check if version already published
         id: check
         run: |
-          PUBLISHED_VERSION=$(npx @vscode/vsce show mamori --json 2>/dev/null | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).versions[0].version' 2>/dev/null || echo "")
+          EXTENSION_ID=$(node -p "const p=require('./package.json'); p.publisher + '.' + p.name")
+          PUBLISHED_VERSION=$(npx @vscode/vsce show "$EXTENSION_ID" --json 2>/dev/null | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).versions[0].version' 2>/dev/null || echo "")
           LOCAL_VERSION="${{ steps.version.outputs.version }}"
           if [ "$PUBLISHED_VERSION" = "$LOCAL_VERSION" ]; then
             echo "バージョン $LOCAL_VERSION は公開済みです。スキップします。"
