@@ -19,9 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 20
           cache: npm
@@ -39,17 +39,33 @@ jobs:
           EXTENSION_ID=$(node -p "const p=require('./package.json'); p.publisher + '.' + p.name")
           LOCAL_VERSION="${{ steps.version.outputs.version }}"
 
-          # Marketplace APIから公開済みバージョン一覧を取得
-          API_RESPONSE=$(npx @vscode/vsce show "$EXTENSION_ID" --json 2>&1) && API_SUCCESS=true || API_SUCCESS=false
+          # Marketplace APIから公開済みバージョン一覧を取得（stdoutのみをJSONパース対象とし、stderrはログ用に分離する）
+          API_STDOUT=$(mktemp)
+          API_STDERR=$(mktemp)
+          if npx @vscode/vsce show "$EXTENSION_ID" --json >"$API_STDOUT" 2>"$API_STDERR"; then
+            API_SUCCESS=true
+          else
+            API_SUCCESS=false
+          fi
 
           if [ "$API_SUCCESS" = "false" ]; then
             echo "::warning::Marketplace APIへのアクセスに失敗しました。公開を試みます。"
-            echo "$API_RESPONSE" | head -5
+            echo "vsce stderr (first 5 lines):"
+            head -5 "$API_STDERR" || true
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
           else
-            VERSION_EXISTS=$(echo "$API_RESPONSE" | node -p "
-              const versions = JSON.parse(require('fs').readFileSync(0,'utf8')).versions || [];
-              versions.some(v => v.version === '$LOCAL_VERSION')
+            VERSION_EXISTS=$(cat "$API_STDOUT" | node -p "
+              (function () {
+                try {
+                  const input = require('fs').readFileSync(0, 'utf8');
+                  const parsed = JSON.parse(input);
+                  const versions = (parsed && parsed.versions) || [];
+                  return versions.some(v => v.version === '$LOCAL_VERSION');
+                } catch (error) {
+                  console.error('::warning::Failed to parse Marketplace API response. Publishing will be attempted.');
+                  return false;
+                }
+              })()
             ")
             if [ "$VERSION_EXISTS" = "true" ]; then
               echo "バージョン $LOCAL_VERSION は公開済みです。スキップします。"
