@@ -19,9 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+      - uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: npm
@@ -38,16 +38,26 @@ jobs:
         run: |
           EXTENSION_ID=$(node -p "const p=require('./package.json'); p.publisher + '.' + p.name")
           LOCAL_VERSION="${{ steps.version.outputs.version }}"
-          VERSION_EXISTS=$(npx @vscode/vsce show "$EXTENSION_ID" --json 2>/dev/null | node -p "
-            const versions = JSON.parse(require('fs').readFileSync(0,'utf8')).versions || [];
-            versions.some(v => v.version === '$LOCAL_VERSION')
-          " 2>/dev/null || echo "false")
-          if [ "$VERSION_EXISTS" = "true" ]; then
-            echo "バージョン $LOCAL_VERSION は公開済みです。スキップします。"
-            echo "should_publish=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "バージョン $LOCAL_VERSION を公開します。"
+
+          # Marketplace APIから公開済みバージョン一覧を取得
+          API_RESPONSE=$(npx @vscode/vsce show "$EXTENSION_ID" --json 2>&1) && API_SUCCESS=true || API_SUCCESS=false
+
+          if [ "$API_SUCCESS" = "false" ]; then
+            echo "::warning::Marketplace APIへのアクセスに失敗しました。公開を試みます。"
+            echo "$API_RESPONSE" | head -5
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          else
+            VERSION_EXISTS=$(echo "$API_RESPONSE" | node -p "
+              const versions = JSON.parse(require('fs').readFileSync(0,'utf8')).versions || [];
+              versions.some(v => v.version === '$LOCAL_VERSION')
+            ")
+            if [ "$VERSION_EXISTS" = "true" ]; then
+              echo "バージョン $LOCAL_VERSION は公開済みです。スキップします。"
+              echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "バージョン $LOCAL_VERSION を公開します。"
+              echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            fi
           fi
 
       - name: lint
@@ -64,6 +74,13 @@ jobs:
 
       - name: publish to VS Code Marketplace
         if: steps.check.outputs.should_publish == 'true'
-        run: npx @vscode/vsce publish --packagePath extension.vsix
+        run: |
+          npx @vscode/vsce publish --packagePath extension.vsix 2>&1 | tee /tmp/vsce-publish.log
+          # vsceがexit 0でも実際には公開失敗しているケースがあるため、成功メッセージの存在を検証する
+          if ! grep -q "Published" /tmp/vsce-publish.log; then
+            echo "::error::Marketplace公開の成功を確認できませんでした。出力内容:"
+            cat /tmp/vsce-publish.log
+            exit 1
+          fi
         env:
           VSCE_PAT: ${{ secrets.MARKETPLACE_ACCESS_TOKEN }}
