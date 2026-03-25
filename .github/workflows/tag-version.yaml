@@ -18,6 +18,8 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 2
+    outputs:
+      tag: ${{ steps.create-tag.outputs.tag }}
     steps:
       - name: validate version format
         id: validate
@@ -53,6 +55,7 @@ jobs:
         with:
           ref: ${{ steps.set-target-branch.outputs.result }}
       - name: create tag
+        id: create-tag
         if: steps.validate.outputs.result == 'continue'
         uses: actions/github-script@v7
         env:
@@ -66,5 +69,16 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: `refs/tags/${tagName}`,
-              sha: github.event.pull_request.head.sha
+              sha: context.payload.pull_request.head.sha
             });
+            core.setOutput('tag', tagName);
+
+  publish:
+    name: publish extension
+    needs: release
+    if: needs.release.outputs.tag != ''
+    uses: ./.github/workflows/publish.yaml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
+    secrets:
+      MARKETPLACE_ACCESS_TOKEN: ${{ secrets.MARKETPLACE_ACCESS_TOKEN }}
