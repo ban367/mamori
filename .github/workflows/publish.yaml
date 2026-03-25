@@ -37,13 +37,16 @@ jobs:
         id: check
         run: |
           EXTENSION_ID=$(node -p "const p=require('./package.json'); p.publisher + '.' + p.name")
-          PUBLISHED_VERSION=$(npx @vscode/vsce show "$EXTENSION_ID" --json 2>/dev/null | node -p 'JSON.parse(require("fs").readFileSync(0,"utf8")).versions[0].version' 2>/dev/null || echo "")
           LOCAL_VERSION="${{ steps.version.outputs.version }}"
-          if [ "$PUBLISHED_VERSION" = "$LOCAL_VERSION" ]; then
+          VERSION_EXISTS=$(npx @vscode/vsce show "$EXTENSION_ID" --json 2>/dev/null | node -p "
+            const versions = JSON.parse(require('fs').readFileSync(0,'utf8')).versions || [];
+            versions.some(v => v.version === '$LOCAL_VERSION')
+          " 2>/dev/null || echo "false")
+          if [ "$VERSION_EXISTS" = "true" ]; then
             echo "バージョン $LOCAL_VERSION は公開済みです。スキップします。"
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
           else
-            echo "バージョン $LOCAL_VERSION を公開します。(公開済み: ${PUBLISHED_VERSION:-なし})"
+            echo "バージョン $LOCAL_VERSION を公開します。"
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -57,10 +60,10 @@ jobs:
 
       - name: package extension
         if: steps.check.outputs.should_publish == 'true'
-        run: npx @vscode/vsce package
+        run: npx @vscode/vsce package --out extension.vsix
 
       - name: publish to VS Code Marketplace
         if: steps.check.outputs.should_publish == 'true'
-        run: npx @vscode/vsce publish --packagePath "mamori-${{ steps.version.outputs.version }}.vsix"
+        run: npx @vscode/vsce publish --packagePath extension.vsix
         env:
           VSCE_PAT: ${{ secrets.MARKETPLACE_ACCESS_TOKEN }}

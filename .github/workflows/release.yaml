@@ -36,7 +36,9 @@ jobs:
         run: npm ci
 
       - name: package extension
-        run: npx @vscode/vsce package
+        id: package
+        run: |
+          npx @vscode/vsce package --out extension.vsix
 
       - name: create GitHub Release
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -75,12 +77,16 @@ jobs:
             });
 
             // .vsixファイルをリリースアセットとして添付
-            const vsixPath = `mamori-${version}.vsix`;
+            const vsixPath = 'extension.vsix';
             const vsixData = fs.readFileSync(vsixPath);
             await github.rest.repos.uploadReleaseAsset({
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: release.data.id,
-              name: vsixPath,
-              data: vsixData
+              name: `mamori-${version}.vsix`,
+              data: vsixData,
+              headers: {
+                'content-type': 'application/octet-stream',
+                'content-length': vsixData.length,
+              },
             });
