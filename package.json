@@ -2,7 +2,7 @@
   "name": "mamori",
   "displayName": "Mamori - GitHub Actions Version Manager",
   "description": "Inline version display and management for GitHub Actions in workflow files",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "ban367",
   "license": "MIT",
   "repository": {
