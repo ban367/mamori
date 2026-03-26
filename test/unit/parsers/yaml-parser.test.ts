@@ -136,6 +136,49 @@ jobs:
     expect(refs[0].refRange.start.character).toBe(31);
     expect(refs[0].refRange.end.character).toBe(33);
   });
+
+  it("空行を挟む連続uses行で正しい行番号が返される", () => {
+    const doc = createMockDocument(
+      "jobs:\n" +
+        "  build:\n" +
+        "    steps:\n" +
+        "      - uses: actions/checkout@v4\n" +
+        "\n" +
+        "      - uses: actions/setup-node@v4",
+    );
+    const refs = parseDocument(doc);
+    expect(refs).toHaveLength(2);
+    expect(refs[0].range.start.line).toBe(3);
+    expect(refs[0].repo).toBe("checkout");
+    expect(refs[1].range.start.line).toBe(5);
+    expect(refs[1].repo).toBe("setup-node");
+  });
+
+  it("空行なしの連続uses行で正しい行番号が返される", () => {
+    const doc = createMockDocument(
+      "    steps:\n" +
+        "      - uses: actions/checkout@v4\n" +
+        "      - uses: actions/setup-node@v4",
+    );
+    const refs = parseDocument(doc);
+    expect(refs).toHaveLength(2);
+    expect(refs[0].range.start.line).toBe(1);
+    expect(refs[1].range.start.line).toBe(2);
+  });
+
+  it("複数の空行を挟むuses行で正しい行番号が返される", () => {
+    const doc = createMockDocument(
+      "    steps:\n" +
+        "      - uses: actions/checkout@v4\n" +
+        "\n" +
+        "\n" +
+        "      - uses: actions/setup-node@v4",
+    );
+    const refs = parseDocument(doc);
+    expect(refs).toHaveLength(2);
+    expect(refs[0].range.start.line).toBe(1);
+    expect(refs[1].range.start.line).toBe(4);
+  });
 });
 
 describe("isTargetDocument", () => {
