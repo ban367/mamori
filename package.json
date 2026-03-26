@@ -3,16 +3,16 @@
   "displayName": "Mamori - GitHub Actions Version Manager",
   "description": "Inline version display and management for GitHub Actions in workflow files",
   "version": "0.1.0",
-  "publisher": "mamori",
+  "publisher": "ban367",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mamori/mamori"
+    "url": "https://github.com/ban367/mamori"
   },
   "bugs": {
-    "url": "https://github.com/mamori/mamori/issues"
+    "url": "https://github.com/ban367/mamori/issues"
   },
-  "homepage": "https://github.com/mamori/mamori#readme",
+  "homepage": "https://github.com/ban367/mamori#readme",
   "keywords": [
     "github-actions",
     "version",
