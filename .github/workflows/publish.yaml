@@ -48,24 +48,15 @@ jobs:
             API_SUCCESS=false
           fi
 
-          if [ "$API_SUCCESS" = "false" ]; then
-            echo "::warning::Marketplace APIへのアクセスに失敗しました。公開を試みます。"
-            echo "vsce stderr (first 5 lines):"
-            head -5 "$API_STDERR" || true
+          if [ "$API_SUCCESS" = "false" ] || [ ! -s "$API_STDOUT" ]; then
+            echo "::notice::Marketplace APIから有効なレスポンスを取得できませんでした（未公開の拡張機能の可能性があります）。公開を試みます。"
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
           else
             VERSION_EXISTS=$(cat "$API_STDOUT" | node -p "
-              (function () {
-                try {
-                  const input = require('fs').readFileSync(0, 'utf8');
-                  const parsed = JSON.parse(input);
-                  const versions = (parsed && parsed.versions) || [];
-                  return versions.some(v => v.version === '$LOCAL_VERSION');
-                } catch (error) {
-                  console.error('::warning::Failed to parse Marketplace API response. Publishing will be attempted.');
-                  return false;
-                }
-              })()
+              const input = require('fs').readFileSync(0, 'utf8');
+              const parsed = JSON.parse(input);
+              const versions = (parsed && parsed.versions) || [];
+              versions.some(v => v.version === '$LOCAL_VERSION');
             ")
             if [ "$VERSION_EXISTS" = "true" ]; then
               echo "バージョン $LOCAL_VERSION は公開済みです。スキップします。"
