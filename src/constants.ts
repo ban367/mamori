@@ -2,7 +2,7 @@
 export const GITHUB_API_BASE = "https://api.github.com";
 
 /** Regex pattern to extract `uses:` lines (with global flag) */
-export const USES_LINE_PATTERN = /^(\s*-?\s*uses:\s*)(['"]?)([^'"#\s]+)\2/gm;
+export const USES_LINE_PATTERN = /^([ \t]*-?[ \t]*uses:[ \t]*)(['"]?)([^'"#\s]+)\2/gm;
 
 /** Regex pattern to parse action references */
 export const ACTION_REF_PATTERN = /^([^/]+)\/([^/@]+)(?:\/([^@]+))?@(.+)$/;
