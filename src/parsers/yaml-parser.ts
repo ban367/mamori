@@ -7,33 +7,35 @@ import { parseActionReference } from "./action-reference";
  * Parse a document's text to extract `uses:` lines and return ActionReference array.
  */
 export function parseDocument(document: vscode.TextDocument): ActionReference[] {
-  const text = document.getText();
   const references: ActionReference[] = [];
+  const linePattern = new RegExp(USES_LINE_PATTERN.source);
+  const lineCount = document.lineCount;
 
-  const pattern = new RegExp(USES_LINE_PATTERN.source, USES_LINE_PATTERN.flags);
-  let match: RegExpExecArray | null;
+  for (let i = 0; i < lineCount; i++) {
+    const lineText = document.lineAt(i).text;
+    const match = linePattern.exec(lineText);
+    if (!match) {
+      continue;
+    }
 
-  while ((match = pattern.exec(text)) !== null) {
     const raw = match[3];
     const parsed = parseActionReference(raw);
     if (!parsed) {
       continue;
     }
 
-    const lineIndex = document.positionAt(match.index).line;
     const prefix = match[1];
     const quote = match[2];
 
-    const lineStart = new vscode.Position(lineIndex, 0);
-    const lineTextLength = document.lineAt(lineIndex).text.length;
-    const lineEnd = new vscode.Position(lineIndex, lineTextLength);
+    const lineStart = new vscode.Position(i, 0);
+    const lineEnd = new vscode.Position(i, lineText.length);
     const range = new vscode.Range(lineStart, lineEnd);
 
     const refStartCol = prefix.length + quote.length + raw.indexOf("@") + 1;
     const refEndCol = prefix.length + quote.length + raw.length;
     const refRange = new vscode.Range(
-      new vscode.Position(lineIndex, refStartCol),
-      new vscode.Position(lineIndex, refEndCol),
+      new vscode.Position(i, refStartCol),
+      new vscode.Position(i, refEndCol),
     );
 
     references.push({

@@ -18,6 +18,7 @@ function createMockDocument(text: string, filePath = "/.github/workflows/ci.yml"
       }
       return { line: lines.length - 1, character: 0 };
     },
+    lineCount: lines.length,
     lineAt: (line: number) => ({ text: lines[line] ?? "" }),
   } as any;
 }
