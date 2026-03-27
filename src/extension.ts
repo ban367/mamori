@@ -15,6 +15,7 @@ let decorator: Decorator;
 let resolver: ActionResolver;
 let codeLensProvider: ActionCodeLensProvider;
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+let updateVersion = 0;
 let outputChannel: vscode.OutputChannel;
 
 function log(message: string): void {
@@ -103,6 +104,8 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 async function updateDecorations(editor: vscode.TextEditor): Promise<void> {
+  const thisVersion = ++updateVersion;
+
   try {
     const references = parseDocument(editor.document);
 
@@ -113,6 +116,15 @@ async function updateDecorations(editor: vscode.TextEditor): Promise<void> {
 
     const resolvedActions = await resolver.resolveAll(references);
 
+    // await 中に新しい呼び出しがあった場合は古い結果を破棄
+    if (thisVersion !== updateVersion) {
+      return;
+    }
+    // await 中にエディタが閉じられた場合は破棄
+    if (editor.document.isClosed) {
+      return;
+    }
+
     const config = vscode.workspace.getConfiguration("mamori");
     if (config.get<boolean>("enableDecorations", true)) {
       decorator.applyDecorations(editor, resolvedActions);
@@ -121,6 +133,9 @@ async function updateDecorations(editor: vscode.TextEditor): Promise<void> {
     }
     codeLensProvider?.refresh();
   } catch (error) {
+    if (thisVersion !== updateVersion) {
+      return;
+    }
     const message = error instanceof Error ? error.message : String(error);
     log(`Error: ${message}`);
     console.error("[Mamori]", error);

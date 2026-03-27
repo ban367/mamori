@@ -3,7 +3,7 @@ import { parseDocument, isTargetDocument } from "../../../src/parsers/yaml-parse
 
 /** テスト用の簡易TextDocumentモック */
 function createMockDocument(text: string, filePath = "/.github/workflows/ci.yml") {
-  const lines = text.split("\n");
+  const lines = text.split(/\r?\n/);
   return {
     getText: () => text,
     uri: { fsPath: filePath },
@@ -18,6 +18,7 @@ function createMockDocument(text: string, filePath = "/.github/workflows/ci.yml"
       }
       return { line: lines.length - 1, character: 0 };
     },
+    lineCount: lines.length,
     lineAt: (line: number) => ({ text: lines[line] ?? "" }),
   } as any;
 }
@@ -178,6 +179,24 @@ jobs:
     expect(refs).toHaveLength(2);
     expect(refs[0].range.start.line).toBe(1);
     expect(refs[1].range.start.line).toBe(4);
+  });
+
+  it("CRLF改行コードでも正しくパースできる", () => {
+    const doc = createMockDocument(
+      "jobs:\r\n" +
+        "  build:\r\n" +
+        "    steps:\r\n" +
+        "      - uses: actions/checkout@v4\r\n" +
+        "\r\n" +
+        "      - uses: actions/setup-node@v4",
+    );
+    const refs = parseDocument(doc);
+    expect(refs).toHaveLength(2);
+    expect(refs[0].range.start.line).toBe(3);
+    expect(refs[0].repo).toBe("checkout");
+    expect(refs[0].ref).toBe("v4");
+    expect(refs[1].range.start.line).toBe(5);
+    expect(refs[1].repo).toBe("setup-node");
   });
 });
 
