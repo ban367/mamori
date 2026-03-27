@@ -8,7 +8,8 @@ import { parseActionReference } from "./action-reference";
  */
 export function parseDocument(document: vscode.TextDocument): ActionReference[] {
   const references: ActionReference[] = [];
-  const linePattern = new RegExp(USES_LINE_PATTERN.source);
+  const lineFlags = USES_LINE_PATTERN.flags.replace(/[gm]/g, "");
+  const linePattern = new RegExp(USES_LINE_PATTERN.source, lineFlags);
   const lineCount = document.lineCount;
 
   for (let i = 0; i < lineCount; i++) {
