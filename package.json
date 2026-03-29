@@ -1,6 +1,6 @@
 {
   "name": "mamori",
-  "displayName": "Mamori - GitHub Actions Version Manager",
+  "displayName": "Mamori",
   "description": "Inline version display and management for GitHub Actions in workflow files",
   "version": "0.1.2",
   "publisher": "ban367",

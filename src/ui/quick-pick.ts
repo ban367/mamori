@@ -10,8 +10,7 @@ export interface VersionPickResult {
 
 /**
  * Show version selection QuickPick.
- * Step 1: Select a version
- * Step 2: Choose replacement format (tag name or SHA)
+ * タグ名とSHAをフラットリストで表示し、1回の操作で選択・形式決定を行う。
  */
 export async function showVersionQuickPick(
   resolved: ResolvedAction,
@@ -22,56 +21,45 @@ export async function showVersionQuickPick(
     return undefined;
   }
 
-  // Step 1: Select version
-  const items: (vscode.QuickPickItem & { tag: TagInfo })[] = tags.map((tag) => {
-    const isCurrent = tag.name === resolved.reference.ref || tag.sha === resolved.reference.ref;
-    const description = [
-      tag.sha.substring(0, 7),
-      isCurrent ? "(current)" : undefined,
-    ]
-      .filter(Boolean)
-      .join(" · ");
+  type PickItem = vscode.QuickPickItem & { tag?: TagInfo; value?: string };
+  const items: PickItem[] = [];
 
-    return {
-      label: `${isCurrent ? "$(check) " : ""}${tag.name}`,
-      description,
+  for (let i = 0; i < tags.length; i++) {
+    const tag = tags[i];
+    const isCurrent = tag.name === resolved.reference.ref || tag.sha === resolved.reference.ref;
+    const checkMark = isCurrent ? "$(check) " : "";
+
+    // セパレータでバージョンごとにグループ化
+    if (i > 0) {
+      items.push({ label: "", kind: vscode.QuickPickItemKind.Separator });
+    }
+
+    // タグ名で置換するアイテム
+    items.push({
+      label: `${checkMark}$(tag) ${tag.name}`,
+      description: isCurrent ? "(current)" : undefined,
       tag,
-    };
-  });
+      value: tag.name,
+    });
+
+    // SHAで置換するアイテム
+    items.push({
+      label: `$(key) ${tag.sha}`,
+      tag,
+      value: tag.sha,
+    });
+  }
 
   const selected = await vscode.window.showQuickPick(items, {
     title: `${resolved.reference.owner}/${resolved.reference.repo} - Select version`,
-    placeHolder: "Select a version",
+    placeHolder: "Select a version (tag name or SHA)",
   });
 
-  if (!selected) {
+  if (!selected?.tag || !selected.value) {
     return undefined;
   }
 
-  // Step 2: Choose replacement format (tag name or SHA)
-  const formatItems: (vscode.QuickPickItem & { value: string })[] = [
-    {
-      label: `$(tag) ${selected.tag.name}`,
-      description: "Replace with tag name",
-      value: selected.tag.name,
-    },
-    {
-      label: `$(key) ${selected.tag.sha}`,
-      description: "Replace with SHA",
-      value: selected.tag.sha,
-    },
-  ];
-
-  const format = await vscode.window.showQuickPick(formatItems, {
-    title: `${selected.tag.name} - Select format`,
-    placeHolder: "Select tag name or SHA",
-  });
-
-  if (!format) {
-    return undefined;
-  }
-
-  return { tag: selected.tag, value: format.value };
+  return { tag: selected.tag, value: selected.value };
 }
 
 /**
