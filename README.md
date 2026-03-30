@@ -1,95 +1,96 @@
 # Mamori - GitHub Actions Version Manager
 
-GitHub Actions ワークフローファイル内の `uses:` 行に、各アクションのバージョン情報をインライン表示する VS Code 拡張機能です。
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/ban367.mamori?label=VS%20Code%20Marketplace&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=ban367.mamori)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## 機能
+A VS Code extension that displays and manages action version information inline on `uses:` lines in GitHub Actions workflow files.
 
-- **バージョンステータスのインライン表示** — `uses:` 行の横に最新バージョンかどうかを表示（✓ = 最新、⬆ = 更新可能）
-- **ダブルクリックでバージョン切り替え** — バージョン部分をダブルクリックすると QuickPick が開き、バージョンを選択できます
-- **タグ名 / コミット SHA の選択** — バージョン選択時にタグ名とコミット SHA のどちらで置換するかを選べます
-- **SHA ⇔ タグの相互変換** — コマンドパレットからワンクリックで変換
-- **ホバーで詳細表示** — 現在のバージョン、最新バージョン、SHA などの詳細情報を表示
-- **CodeLens 表示**（オプション）— `uses:` 行の上にバージョン情報を表示
-- **オフライン対応** — キャッシュ済みデータを利用して、オフライン時もバージョン情報を表示
+![Overview](docs/overview.gif)
 
-## スクリーンショット
+## Features
 
-<!-- TODO: スクリーンショットを追加 -->
+- **Inline version status** — Shows whether each action is up to date right next to the `uses:` line (✓ = latest, ⬆ = update available)
+- **Double-click to change version** — Double-click the version portion to open a QuickPick and select a different version
+- **Tag name / commit SHA selection** — Choose whether to replace with a tag name or commit SHA when selecting a version
+- **SHA ⇔ Tag conversion** — Convert between SHA and tag with one click from the Command Palette
+- **Hover for details** — View detailed information including current version, latest version, and SHA
+- **CodeLens display** (optional) — Show version information above `uses:` lines
+- **Offline support** — Displays version information using cached data even when offline
 
-## インストール
+![Screenshot](docs/screenshot.png)
 
-### VS Code Marketplace から
+## Installation
 
-1. VS Code の拡張機能パネルを開く（`Ctrl+Shift+X` / `Cmd+Shift+X`）
-2. `Mamori` を検索
-3. 「インストール」をクリック
+### From VS Code Marketplace
 
-### VSIX ファイルから
+[Mamori](https://marketplace.visualstudio.com/items?itemName=ban367.mamori)
+
+1. Open the Extensions panel in VS Code (`Ctrl+Shift+X` / `Cmd+Shift+X`)
+2. Search for `Mamori`
+3. Click "Install"
+
+### From VSIX
+
+Download from [GitHub Releases](https://github.com/ban367/mamori/releases).
+
+## Usage
+
+1. Open a `.github/workflows/*.yml` or `action.yml` / `action.yaml` file
+2. Version status will automatically appear next to `uses:` lines
+3. Double-click the version portion to open the version switcher QuickPick
+4. The following commands are also available from the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
+   - **Mamori: Change Version** — Change the action version
+   - **Mamori: Toggle SHA/Tag** — Convert between SHA and tag name
+   - **Mamori: Refresh Version Info** — Re-fetch version information
+   - **Mamori: Clear Cache** — Clear the version cache
+   - **Mamori: Set GitHub Token** — Set a GitHub authentication token
+
+## Configuration
+
+| Setting                        | Type    | Default | Description                              |
+| ------------------------------ | ------- | ------- | ---------------------------------------- |
+| `mamori.cacheTtlMinutes`       | number  | `60`    | Cache TTL in minutes                     |
+| `mamori.enableCodeLens`        | boolean | `false` | Enable CodeLens display                  |
+| `mamori.enableDecorations`     | boolean | `true`  | Enable inline version decorations        |
+| `mamori.maxConcurrentRequests` | number  | `5`     | Maximum number of concurrent API requests |
+
+## GitHub Authentication
+
+Setting up an authentication token is recommended to increase the GitHub API rate limit. Authentication is resolved in the following order:
+
+1. **VS Code SecretStorage** — Set via `Mamori: Set GitHub Token` in the Command Palette
+2. **GitHub CLI** — Output of `gh auth token`
+3. **Environment variable** — `GITHUB_TOKEN`
+4. **Unauthenticated** — Rate limited to 60 requests/hour
+
+## Development
 
 ```sh
-npx @vscode/vsce package
-code --install-extension mamori-*.vsix
-```
-
-## 使い方
-
-1. `.github/workflows/*.yml` または `action.yml` / `action.yaml` を開く
-2. `uses:` 行の横にバージョンステータスが自動表示されます
-3. バージョン部分をダブルクリックすると、バージョン切り替え QuickPick が開きます
-4. コマンドパレット（`Ctrl+Shift+P` / `Cmd+Shift+P`）から以下のコマンドも利用可能です:
-   - **Mamori: Change Version** — バージョンを変更
-   - **Mamori: Toggle SHA/Tag** — SHA とタグ名を相互変換
-   - **Mamori: Refresh Version Info** — バージョン情報を再取得
-   - **Mamori: Clear Cache** — キャッシュをクリア
-   - **Mamori: Set GitHub Token** — GitHub トークンを設定
-
-## 設定
-
-| 設定項目                       | 型      | デフォルト | 説明                                 |
-| ------------------------------ | ------- | ---------- | ------------------------------------ |
-| `mamori.cacheTtlMinutes`       | number  | `60`       | キャッシュの有効期間（分）           |
-| `mamori.enableCodeLens`        | boolean | `false`    | CodeLens 表示を有効にする            |
-| `mamori.enableDecorations`     | boolean | `true`     | インラインバージョン装飾を有効にする |
-| `mamori.showMajorVersionOnly`  | boolean | `false`    | メジャーバージョンタグのみ表示       |
-| `mamori.maxConcurrentRequests` | number  | `5`        | 同時 API リクエストの最大数          |
-
-## GitHub 認証
-
-GitHub API のレート制限を緩和するため、認証トークンの設定を推奨します。以下の優先順位で認証情報を検索します:
-
-1. **VS Code SecretStorage** — コマンドパレットから `Mamori: Set GitHub Token` で設定
-2. **GitHub CLI** — `gh auth token` コマンドの出力
-3. **環境変数** — `GITHUB_TOKEN`
-4. **未認証** — レート制限あり（60リクエスト/時間）
-
-## 開発
-
-```sh
-# 依存パッケージのインストール
+# Install dependencies
 npm install
 
-# ビルド
+# Build
 npm run build
 
-# ウォッチモード
+# Watch mode
 npm run watch
 
-# テスト
+# Run tests
 npm test
 
-# パッケージ作成
+# Package extension
 npm run package
 ```
 
-## ライセンス
+## License
 
 [MIT](LICENSE)
 
-## コントリビューション
+## Contributing
 
-Issue や Pull Request を歓迎します。バグ報告・機能リクエスト・改善提案など、お気軽にどうぞ。
+Contributions are welcome! Feel free to open an issue or submit a pull request for bug reports, feature requests, or improvements.
 
-## 詳細ドキュメント
+## Documentation
 
-- [Design Doc](docs/design-doc.md) — 設計ドキュメントのエントリポイント
-- [Changelog](CHANGELOG.md) — 変更履歴
+- [Design Doc](docs/design-doc.md) — Design documentation entry point
+- [Changelog](CHANGELOG.md) — Release history
