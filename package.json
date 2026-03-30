@@ -2,7 +2,7 @@
   "name": "mamori",
   "displayName": "Mamori",
   "description": "Inline version display and management for GitHub Actions in workflow files",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "ban367",
   "license": "MIT",
   "repository": {
@@ -13,6 +13,7 @@
     "url": "https://github.com/ban367/mamori/issues"
   },
   "homepage": "https://github.com/ban367/mamori#readme",
+  "icon": "docs/icon/png/mamori-circle.png",
   "keywords": [
     "github-actions",
     "version",

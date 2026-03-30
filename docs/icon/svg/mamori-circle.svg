@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="512" height="512">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.15" />
+    </filter>
+  </defs>
+
+  <circle cx="128" cy="128" r="128" fill="#333333"/>
+
+  <g transform="translate(0, -5)">
+    <polygon points="78,53 178,53 208,97 208,203 48,203 48,97" fill="#D3381C" stroke="#A12A15" stroke-width="6" stroke-linejoin="miter" filter="url(#shadow)"/>
+
+    <rect x="113" y="38" width="30" height="15" fill="#A12A15" />
+    <rect x="120.5" y="43" width="15" height="5" fill="#D3381C" />
+
+    <g stroke="#FFFFFF" stroke-width="12" fill="none" stroke-linecap="square" stroke-linejoin="miter">
+      <polyline points="72,140 88,174 104,140" />
+      <polyline points="152,174 152,120 184,174 184,120" />
+    </g>
+    
+    <rect x="124" y="166" width="8" height="8" fill="#FFFFFF" />
+  </g>
+
+</svg>
