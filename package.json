@@ -13,7 +13,7 @@
     "url": "https://github.com/ban367/mamori/issues"
   },
   "homepage": "https://github.com/ban367/mamori#readme",
-  "icon": "docs/icon/png/mamori-circle.png",
+  "icon": "media/icon.png",
   "keywords": [
     "github-actions",
     "version",
