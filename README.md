@@ -5,7 +5,7 @@
 
 A VS Code extension that displays and manages action version information inline on `uses:` lines in GitHub Actions workflow files.
 
-![Overview](docs/overview.gif)
+![Overview](media/overview.gif)
 
 ## Features
 
@@ -17,7 +17,7 @@ A VS Code extension that displays and manages action version information inline 
 - **CodeLens display** (optional) — Show version information above `uses:` lines
 - **Offline support** — Displays version information using cached data even when offline
 
-![Screenshot](docs/screenshot.png)
+![Screenshot](media/screenshot.png)
 
 ## Installation
 

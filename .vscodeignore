@@ -2,6 +2,7 @@
 .github/
 .vscode/
 docs/
+media/icon/
 src/
 test/
 node_modules/
